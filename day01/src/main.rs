@@ -23,32 +23,26 @@ fn calibration_value2(line: &str) -> u32 {
     //
     // Instead, we will explicitly search for all possible words at all
     // possible offsets.
-    let words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-    let mut first: Option<u32> = None;
-    let mut last: Option<u32> = None;
-
-    // Loop through the line
-    for (i, c) in line.char_indices() {
-        let mut digit = None;
-        if c.is_ascii_digit() {
-            digit = c.to_digit(10);
-        } else {
-            for (d, word) in words.iter().enumerate() {
-                if line[i..].starts_with(word) {
-                    digit = Some(d as u32 + 1);
-                    break;
-                }
-            }
+    let mut digits = line.char_indices().filter_map(|(i, c)| {
+        let mut digit = c.to_digit(10);
+        if digit.is_none() {
+            digit = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+                .iter()
+                .enumerate()
+                .filter_map(|(n, word)| {
+                    if line[i..].starts_with(word) {
+                        Some(n as u32 + 1)
+                    } else {
+                        None
+                    }
+                })
+                .next()
         }
-        if digit.is_some() {
-            if first.is_none() {
-                first = digit;
-            }
-            last = digit;
-        }
-    }
-
-    first.unwrap() * 10 + last.unwrap()
+        digit
+    });
+    let first = digits.next().expect("must be at least one digit");
+    let last = digits.last().unwrap_or(first);
+    first * 10 + last
 }
 
 fn part1(input: &str) -> u32 {
