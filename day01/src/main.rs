@@ -10,8 +10,8 @@ fn main() {
 
 #[allow(clippy::filter_next)]
 fn calibration_value(line: &str) -> u32 {
-    line.chars().filter(char::is_ascii_digit).next().unwrap().to_digit(10).unwrap() * 10 +
-    line.chars().filter(char::is_ascii_digit).last().unwrap().to_digit(10).unwrap()
+    line.chars().filter_map(|c| c.to_digit(10)).next().unwrap() * 10 +
+    line.chars().filter_map(|c| c.to_digit(10)).last().unwrap()
 }
 
 fn calibration_value2(line: &str) -> u32 {
