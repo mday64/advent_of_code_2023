@@ -23,15 +23,15 @@ fn calibration_value2(line: &str) -> u32 {
     //
     // Instead, we will explicitly search for all possible words at all
     // possible offsets.
-    let mut digits = line.char_indices().filter_map(|(i, c)| {
+    let mut digits = line.char_indices().filter_map(|(line_offset, c)| {
         let mut digit = c.to_digit(10);
         if digit.is_none() {
             digit = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
                 .iter()
                 .enumerate()
-                .filter_map(|(n, word)| {
-                    if line[i..].starts_with(word) {
-                        Some(n as u32 + 1)
+                .filter_map(|(word_index, word)| {
+                    if line[line_offset..].starts_with(word) {
+                        Some(word_index as u32 + 1)
                     } else {
                         None
                     }
