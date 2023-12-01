@@ -10,8 +10,10 @@ fn main() {
 
 #[allow(clippy::filter_next)]
 fn calibration_value(line: &str) -> u32 {
-    line.chars().filter_map(|c| c.to_digit(10)).next().unwrap() * 10 +
-    line.chars().filter_map(|c| c.to_digit(10)).last().unwrap()
+    let mut digits = line.chars().filter_map(|c| c.to_digit(10));
+    let first = digits.next().expect("must be at least one digit");
+    let last = digits.last().unwrap_or(first);
+    first * 10 + last
 }
 
 fn calibration_value2(line: &str) -> u32 {
