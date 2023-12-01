@@ -2,14 +2,16 @@ fn main() {
     let input = include_str!("../input.txt");
     let result1 = part1(input);
     println!("Part 1: {}", result1);
+    assert_eq!(result1, 54597);
     let result2 = part2(input);
     println!("Part 2: {}", result2);
+    assert_eq!(result2, 54504);
 }
 
 #[allow(clippy::filter_next)]
 fn calibration_value(line: &str) -> u32 {
-    line.chars().filter(|c| c.is_ascii_digit()).next().unwrap().to_digit(10).unwrap() * 10 +
-    line.chars().filter(|c| c.is_ascii_digit()).last().unwrap().to_digit(10).unwrap()
+    line.chars().filter(char::is_ascii_digit).next().unwrap().to_digit(10).unwrap() * 10 +
+    line.chars().filter(char::is_ascii_digit).last().unwrap().to_digit(10).unwrap()
 }
 
 fn calibration_value2(line: &str) -> u32 {
