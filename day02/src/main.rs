@@ -1,17 +1,18 @@
-use std::{str::FromStr};
+use std::str::FromStr;
 
 fn main() {
     let input = include_str!("../input.txt");
-    let result1 = part1(input);
+    let games = parse_games(input);
+    
+    let result1 = part1(&games);
     println!("Part 1: {result1}");
     assert_eq!(result1, 2006);
-    let result2 = part2(input);
+    let result2 = part2(&games);
     println!("Part 2: {result2}");
     assert_eq!(result2, 84911);
 }
 
-fn part1(input: &str) -> u32 {
-    let games = parse_games(input);
+fn part1(games: &[Game]) -> u32 {
     games.iter().filter_map(|game| {
         for d in game.draw.iter() {
             if d.red > 12 || d.green > 13 || d.blue > 14 {
@@ -23,8 +24,7 @@ fn part1(input: &str) -> u32 {
     .sum()
 }
 
-fn part2(input: &str) -> u32 {
-    let games = parse_games(input);
+fn part2(games: &[Game]) -> u32 {
     games.iter().map(|game| {
         let mut min_cube = Cubes::new();
         for cubes in game.draw.iter() {
@@ -128,7 +128,8 @@ Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
 ";
-    assert_eq!(part1(input), 8);
+    let games = parse_games(input);
+    assert_eq!(part1(&games), 8);
 }
 
 #[test]
@@ -140,5 +141,6 @@ Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
 ";
-    assert_eq!(part2(input), 2286);
+    let games = parse_games(input);
+    assert_eq!(part2(&games), 2286);
 }
