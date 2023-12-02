@@ -5,6 +5,9 @@ fn main() {
     let result1 = part1(input);
     println!("Part 1: {result1}");
     assert_eq!(result1, 2006);
+    let result2 = part2(input);
+    println!("Part 2: {result2}");
+    assert_eq!(result2, 84911);
 }
 
 fn part1(input: &str) -> u32 {
@@ -16,6 +19,20 @@ fn part1(input: &str) -> u32 {
             }
         }
         Some(game.id)
+    })
+    .sum()
+}
+
+fn part2(input: &str) -> u32 {
+    let games = parse_games(input);
+    games.iter().map(|game| {
+        let mut min_cube = Cubes::new();
+        for cubes in game.draw.iter() {
+            min_cube.red = min_cube.red.max(cubes.red);
+            min_cube.green = min_cube.green.max(cubes.green);
+            min_cube.blue = min_cube.blue.max(cubes.blue);
+        }
+        min_cube.red * min_cube.green * min_cube.blue
     })
     .sum()
 }
@@ -112,4 +129,16 @@ Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
 ";
     assert_eq!(part1(input), 8);
+}
+
+#[test]
+fn example2() {
+    let input = "\
+Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+";
+    assert_eq!(part2(input), 2286);
 }
