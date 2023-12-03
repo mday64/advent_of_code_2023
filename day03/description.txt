@@ -45,3 +45,5 @@ number is adjacent to a symbol and so is a part number; their sum is
 
 Of course, the actual engine schematic is much larger. What is the sum
 of all of the part numbers in the engine schematic?
+
+Your puzzle answer was 559667.
