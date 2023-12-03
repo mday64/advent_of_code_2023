@@ -1,0 +1,17 @@
+General
+-------
+Add time and memory profiling.
+
+Day 1
+-----
+* Convert to a proper parser, like nom.
+
+Day 2
+-----
+* Convert to a proper parser, like nom.
+
+Day 3
+-----
+* Make it more elegant, less brute force imperative style.
+* Combine parts 1 and 2 so they can be computed at the same time.
+* Is there a better way to find symbols adjacent to numbers?
