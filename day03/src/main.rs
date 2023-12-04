@@ -9,7 +9,7 @@ fn main() {
 
     let result2 = part2(input);
     println!("Part 2: {result2}");
-    // assert_eq!(result2, 559667);
+    assert_eq!(result2, 86841457);
 }
 
 fn part1(input: &str) -> u32 {
