@@ -7,7 +7,7 @@ fn main() {
     println!("Part 1: {result1}");
     assert_eq!(result1, 26426);
 
-    let result2= part2(input);
+    let result2 = part2(input);
     println!("Part 1: {result2}");
     assert_eq!(result2, 6227972);
 }
@@ -17,7 +17,10 @@ fn count_matches(card: &str) -> u32 {
     // vertical bar, the number of matches is the number of numbers
     // on the line (excluding the "Card n: " prefix), minus the number
     // of unique numbers.
-    let numbers: Vec<u32> = card.split_whitespace().filter_map(|s| s.parse().ok()).collect();
+    let numbers: Vec<u32> = card
+        .split_whitespace()
+        .filter_map(|s| s.parse().ok())
+        .collect();
     let total_count = numbers.len();
     let unique_numbers: HashSet<u32> = numbers.into_iter().collect();
     let unique_count = unique_numbers.len();
@@ -25,22 +28,23 @@ fn count_matches(card: &str) -> u32 {
 }
 
 fn part1(input: &str) -> u32 {
-    input.lines()
-    .map(|line| {
-        // Assuming that there are no duplicates on either side of the
-        // vertical bar, the number of matches is the number of numbers
-        // on the line (excluding the "Card n: " prefix), minus the number
-        // of unique numbers.  Then we turn that into a score.
-        let (_prefix, rest) = line.split_once(": ").expect("no colon?");
-        let num_matches = count_matches(rest);
-        if num_matches > 0 {
-            // Compute 2 ** (num_matches - 1)
-            1 << (num_matches - 1)
-        } else {
-            0
-        }
-    })
-    .sum()
+    input
+        .lines()
+        .map(|line| {
+            // Assuming that there are no duplicates on either side of the
+            // vertical bar, the number of matches is the number of numbers
+            // on the line (excluding the "Card n: " prefix), minus the number
+            // of unique numbers.  Then we turn that into a score.
+            let (_prefix, rest) = line.split_once(": ").expect("no colon?");
+            let num_matches = count_matches(rest);
+            if num_matches > 0 {
+                // Compute 2 ** (num_matches - 1)
+                1 << (num_matches - 1)
+            } else {
+                0
+            }
+        })
+        .sum()
 }
 
 fn part2(input: &str) -> u32 {
@@ -52,10 +56,10 @@ fn part2(input: &str) -> u32 {
 
         // Make card_counts[i] copies of each of the next num_matches cards
         for j in 0..(num_matches as usize) {
-            card_counts[i+j+1] += card_counts[i];
+            card_counts[i + j + 1] += card_counts[i];
         }
     }
-    
+
     card_counts.iter().sum()
 }
 
