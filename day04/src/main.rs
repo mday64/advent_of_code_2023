@@ -7,9 +7,9 @@ fn main() {
     println!("Part 1: {result1}");
     assert_eq!(result1, 26426);
 
-    // let result2= part2(input);
-    // println!("Part 1: {result2}");
-    // assert_eq!(result2, 26426);
+    let result2= part2(input);
+    println!("Part 1: {result2}");
+    assert_eq!(result2, 6227972);
 }
 
 fn count_matches(card: &str) -> u32 {
@@ -44,7 +44,19 @@ fn part1(input: &str) -> u32 {
 }
 
 fn part2(input: &str) -> u32 {
-    todo!()
+    // We start with one copy of each card.
+    let mut card_counts: Vec<u32> = input.lines().map(|_line| 1).collect();
+
+    for (i, line) in input.lines().enumerate() {
+        let num_matches = count_matches(line.split_once(": ").expect("no colon?").1);
+
+        // Make card_counts[i] copies of each of the next num_matches cards
+        for j in 0..(num_matches as usize) {
+            card_counts[i+j+1] += card_counts[i];
+        }
+    }
+    
+    card_counts.iter().sum()
 }
 
 #[test]
