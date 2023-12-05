@@ -34,8 +34,8 @@ fn part1(input: &str) -> u32 {
         let (_prefix, rest) = line.split_once(": ").expect("no colon?");
         let num_matches = count_matches(rest);
         if num_matches > 0 {
-            // Compute 2 ** (total_count - unique_count - 1)
-            1u32.rotate_left(num_matches - 1)
+            // Compute 2 ** (num_matches - 1)
+            1 << (num_matches - 1)
         } else {
             0
         }
