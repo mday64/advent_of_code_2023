@@ -22,3 +22,6 @@ Day 4
   building a Vec of all the numbers first.  We ought to be able to build the
   HashSet directly, while counting the number of times we iterate (though we
   do need to avoid counting the vertical bar, or subtract 1 to account for it).
+
+  Maybe use fold() to maintain a counter while iterating over numbers (fed into
+  a HashSet collect).  Or use a mutable variable that gets incremented.
