@@ -119,17 +119,17 @@ impl Input {
         let length = seeds.end - seeds.start;
         let soils = self.seed_to_soil.map_range(seeds);
         // println!("soils: {soils:?}");
-        let fertilizers = soils.into_iter().map(|range| self.soil_to_fertilizer.map_range(range)).flatten().collect_vec();
+        let fertilizers = soils.into_iter().map(|range| self.soil_to_fertilizer.map_range(range)).flatten();
         // println!("fertilizers: {fertilizers:?}");
-        let waters = fertilizers.into_iter().map(|range| self.fertilizer_to_water.map_range(range)).flatten().collect_vec();
+        let waters = fertilizers.map(|range| self.fertilizer_to_water.map_range(range)).flatten();
         // println!("waters: {waters:?}");
-        let lights = waters.into_iter().map(|range| self.water_to_light.map_range(range)).flatten().collect_vec();
+        let lights = waters.map(|range| self.water_to_light.map_range(range)).flatten();
         // println!("lights: {lights:?}");
-        let temps = lights.into_iter().map(|range| self.light_to_temp.map_range(range)).flatten().collect_vec();
+        let temps = lights.map(|range| self.light_to_temp.map_range(range)).flatten();
         // println!("temps: {temps:?}");
-        let humids = temps.into_iter().map(|range| self.temp_to_humid.map_range(range)).flatten().collect_vec();
+        let humids = temps.map(|range| self.temp_to_humid.map_range(range)).flatten();
         // println!("humids: {humids:?}");
-        let locations = humids.into_iter().map(|range| self.humid_to_location.map_range(range)).flatten().collect_vec();
+        let locations = humids.map(|range| self.humid_to_location.map_range(range)).flatten().collect_vec();
         // println!("locations: {locations:?}");
 
         assert_eq!(length, locations.iter().map(|r| r.end-r.start).sum());
