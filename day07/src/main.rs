@@ -6,10 +6,20 @@ fn main() {
     let result1 = part1(input);
     println!("Part 1: {result1}");
     assert_eq!(result1, 253205868);
+
+    let result2 = part2(input);
+    println!("Part 2: {result2}");
+    assert_eq!(result2, 253907829);
 }
 
 fn part1(input: &str) -> u32 {
-    let mut hands = input.lines().map(Hand::from_str).collect_vec();
+    let mut hands = input.lines().map(|s| Hand::from_str(s, false)).collect_vec();
+    hands.sort();
+    hands.iter().enumerate().map(|(i, hand)| (i as u32 +1) * hand.bid).sum()
+}
+
+fn part2(input: &str) -> u32 {
+    let mut hands = input.lines().map(|s| Hand::from_str(s, true)).collect_vec();
     hands.sort();
     hands.iter().enumerate().map(|(i, hand)| (i as u32 +1) * hand.bid).sum()
 }
@@ -33,14 +43,14 @@ struct Hand {
 }
 
 impl Hand {
-    fn from_str(s: &str) -> Self {
+    fn from_str(s: &str, jokers: bool) -> Self {
         let (cards_str, bid_str) = s.split_once(' ').expect("a space");
         let cards: Vec<u32> = cards_str
             .chars()
             .map(|c| match c {
                 d if c.is_ascii_digit() => d.to_digit(10).unwrap(),
                 'T' => 10,
-                'J' => 11,
+                'J' => if jokers { 1 } else { 11 },
                 'Q' => 12,
                 'K' => 13,
                 'A' => 14,
@@ -55,6 +65,16 @@ impl Hand {
         sorted_cards.sort_unstable();
         let mut groups: Vec<_> = sorted_cards.into_iter().group_by(|card| *card).into_iter().map(|(_key, group)| group.count()).collect();
         groups.sort_unstable();
+        if jokers {
+            // Find out how many jokers there were
+            let num_jokers = cards_str.chars().filter(|&card| card == 'J').count();
+            if num_jokers > 0 && num_jokers < 5 {
+                // Remove the jokers group, and add them to the largest group
+                let jokers_index = groups.binary_search(&num_jokers).unwrap();
+                groups.remove(jokers_index);
+                *(groups.last_mut().unwrap()) += num_jokers;
+            }
+        }
         let kind = if groups == vec![5] {
             HandKind::FiveOfAKind
         } else if groups == vec![1, 4] {
@@ -103,4 +123,9 @@ QQQJA 483
 #[test]
 fn test_part1_example() {
     assert_eq!(part1(EXAMPLE_INPUT), 6440);
+}
+
+#[test]
+fn test_part2_example() {
+    assert_eq!(part2(EXAMPLE_INPUT), 5905);
 }
