@@ -104,3 +104,4 @@ steps.
 Simultaneously start on every node that ends with A. How many steps does
 it take before you're only on nodes that end with Z?
 
+Your puzzle answer was 7309459565207.

@@ -16,12 +16,14 @@ fn part1(input: &str) -> u32 {
     let mut lines = input.lines();
     let mut directions = lines.next().unwrap().chars().cycle();
     assert_eq!(lines.next().unwrap(), "");
-    let nodes: HashMap<&str, (&str, &str)> = lines.map(|line| {
-        let (key, values) = line.split_once(" = ").unwrap();
-        let values = values.strip_prefix('(').unwrap().strip_suffix(')').unwrap();
-        let (left, right) = values.split_once(", ").unwrap();
-        (key, (left, right))
-    }).collect();
+    let nodes: HashMap<&str, (&str, &str)> = lines
+        .map(|line| {
+            let (key, values) = line.split_once(" = ").unwrap();
+            let values = values.strip_prefix('(').unwrap().strip_suffix(')').unwrap();
+            let (left, right) = values.split_once(", ").unwrap();
+            (key, (left, right))
+        })
+        .collect();
 
     let mut steps = 0;
     let mut current = "AAA";
@@ -30,7 +32,7 @@ fn part1(input: &str) -> u32 {
         current = match directions.next().unwrap() {
             'L' => children.0,
             'R' => children.1,
-            _ => panic!("invalid direction")
+            _ => panic!("invalid direction"),
         };
         steps += 1;
     }
@@ -51,43 +53,58 @@ fn part2(input: &str) -> usize {
     let mut lines = input.lines();
     let mut directions = lines.next().unwrap().chars().cycle();
     assert_eq!(lines.next().unwrap(), "");
-    let nodes: HashMap<&str, (&str, &str)> = lines.map(|line| {
-        let (key, values) = line.split_once(" = ").unwrap();
-        let values = values.strip_prefix('(').unwrap().strip_suffix(')').unwrap();
-        let (left, right) = values.split_once(", ").unwrap();
-        (key, (left, right))
-    }).collect();
+    let nodes: HashMap<&str, (&str, &str)> = lines
+        .map(|line| {
+            let (key, values) = line.split_once(" = ").unwrap();
+            let values = values.strip_prefix('(').unwrap().strip_suffix(')').unwrap();
+            let (left, right) = values.split_once(", ").unwrap();
+            (key, (left, right))
+        })
+        .collect();
 
-    let starting_states: Vec<&str> = nodes.keys().filter(|key| key.ends_with('A')).cloned().collect();
+    let starting_states: Vec<&str> = nodes
+        .keys()
+        .filter(|key| key.ends_with('A'))
+        .cloned()
+        .collect();
 
     // Find the cycles for each of the starting states
-    let cycles: Vec<_> = starting_states.into_iter().map(|initial| {
-        let mut current = initial;
-        let mut steps = 0;
-        let mut seen: HashMap<&str, usize> = HashMap::new();
-        while !seen.contains_key(current) {
-            if current.ends_with('Z') {
-                seen.insert(current, steps);
+    let cycles: Vec<_> = starting_states
+        .into_iter()
+        .map(|initial| {
+            let mut current = initial;
+            let mut steps = 0;
+            let mut seen: HashMap<&str, usize> = HashMap::new();
+            while !seen.contains_key(current) {
+                if current.ends_with('Z') {
+                    seen.insert(current, steps);
+                }
+                let children = nodes.get(current).unwrap();
+                current = match directions.next().unwrap() {
+                    'L' => children.0,
+                    'R' => children.1,
+                    _ => panic!("invalid direction"),
+                };
+                steps += 1;
             }
-            let children = nodes.get(current).unwrap();
-            current = match directions.next().unwrap() {
-                'L' => children.0,
-                'R' => children.1,
-                _ => panic!("invalid direction")
-            };
-            steps += 1;
-        }
-        let cycle_start = *seen.get(current).unwrap();
-        let cycle_length = steps - cycle_start;
-        (cycle_start, cycle_length)
-    }).collect();
+            let cycle_start = *seen.get(current).unwrap();
+            let cycle_length = steps - cycle_start;
+            (cycle_start, cycle_length)
+        })
+        .collect();
 
     // While debugging, I noticed that cycle_start == cycle_length for
     // each cycle.  That simplifies calculating the answer.  I'll leave
     // a more general solution for another time.
-    assert!(cycles.iter().all(|(cycle_start, cycle_length)| cycle_start == cycle_length));
+    assert!(cycles
+        .iter()
+        .all(|(cycle_start, cycle_length)| cycle_start == cycle_length));
 
-    cycles.iter().map(|(_start, length)| *length).reduce(num::integer::lcm).unwrap()
+    cycles
+        .iter()
+        .map(|(_start, length)| *length)
+        .reduce(num::integer::lcm)
+        .unwrap()
 }
 
 #[cfg(test)]
