@@ -9,7 +9,7 @@ fn main() {
 
     let result2 = part2(input);
     println!("Part 2: {result2}");
-    assert_eq!(result2, 13301);
+    assert_eq!(result2, 7309459565207);
 }
 
 fn part1(input: &str) -> u32 {
@@ -37,7 +37,17 @@ fn part1(input: &str) -> u32 {
     steps
 }
 
-fn part2(input: &str) -> u32 {
+//
+// The answer for part 2 is sufficiently large that it is impractical to
+// try to simulate the set of steps from each starting state in parallel.
+//
+// Let's call the answer N.  Since the total number of states is far
+// smaller than N, each starting state will produce a cycle.  The answer,
+// N, will be congruent to the number of steps until the cycle starts,
+// modulo the number of steps in the cycle.  (Here, a cycle refers to
+// a state that is a valid ending state; i.e., it ends with "Z".)
+//
+fn part2(input: &str) -> usize {
     let mut lines = input.lines();
     let mut directions = lines.next().unwrap().chars().cycle();
     assert_eq!(lines.next().unwrap(), "");
@@ -48,22 +58,36 @@ fn part2(input: &str) -> u32 {
         (key, (left, right))
     }).collect();
 
-    let mut steps = 0;
-    let mut current: Vec<&str> = nodes.keys().filter(|key| key.ends_with('A')).cloned().collect();
-    while !current.iter().all(|key| key.ends_with('Z')) {
-        let direction = directions.next().unwrap();
-        // println!("{:?}", current);
-        for c in current.iter_mut() {
-            let children = nodes.get(c).unwrap();
-            *c = match direction {
+    let starting_states: Vec<&str> = nodes.keys().filter(|key| key.ends_with('A')).cloned().collect();
+
+    // Find the cycles for each of the starting states
+    let cycles: Vec<_> = starting_states.into_iter().map(|initial| {
+        let mut current = initial;
+        let mut steps = 0;
+        let mut seen: HashMap<&str, usize> = HashMap::new();
+        while !seen.contains_key(current) {
+            if current.ends_with('Z') {
+                seen.insert(current, steps);
+            }
+            let children = nodes.get(current).unwrap();
+            current = match directions.next().unwrap() {
                 'L' => children.0,
                 'R' => children.1,
                 _ => panic!("invalid direction")
             };
+            steps += 1;
         }
-        steps += 1;
-    }
-    steps
+        let cycle_start = *seen.get(current).unwrap();
+        let cycle_length = steps - cycle_start;
+        (cycle_start, cycle_length)
+    }).collect();
+
+    // While debugging, I noticed that cycle_start == cycle_length for
+    // each cycle.  That simplifies calculating the answer.  I'll leave
+    // a more general solution for another time.
+    assert!(cycles.iter().all(|(cycle_start, cycle_length)| cycle_start == cycle_length));
+
+    cycles.iter().map(|(_start, length)| *length).reduce(num::integer::lcm).unwrap()
 }
 
 #[cfg(test)]
