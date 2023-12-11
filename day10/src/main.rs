@@ -128,6 +128,7 @@ fn part2(input: &str) -> u32 {
         marks[0][col] = true;
         marks[2*num_rows+2][col] = true;
     }
+    #[allow(clippy::needless_range_loop)]
     for row in 1..(2*num_rows+2) {
         marks[row][0] = true;
         marks[row][2*num_cols+2] = true;

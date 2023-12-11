@@ -26,6 +26,17 @@ Day 4
   Maybe use fold() to maintain a counter while iterating over numbers (fed into
   a HashSet collect).  Or use a mutable variable that gets incremented.
 
+Day 10
+------
+* For part 2, try "ray casting."  As you move in a straight line, an even
+  number of crossings means outside, and odd number of crossings is inside.
+  Be careful about the very edge (going along the pipe or its edge).
+  I think it would be easiest to cast horizontal rays (so you can do a whole
+  line at once).  For consistency, pretend you're casting a ray just below
+  the midline of the row.  So a crossing is "|", "F", or "7".  Don't forget
+  to figure out which shape the pipe at "S" is, and use that shape for counting
+  crossings.  When you hit a space that isn't part of the loop, count it as
+  "inside" if there have been an odd number of crossings.
 Day 11
 ------
 * Part 1 is slow in debug mode.  Where is the time being spent?  My guess is
