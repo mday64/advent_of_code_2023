@@ -25,3 +25,10 @@ Day 4
 
   Maybe use fold() to maintain a counter while iterating over numbers (fed into
   a HashSet collect).  Or use a mutable variable that gets incremented.
+
+Day 11
+------
+* Part 1 is slow in debug mode.  Where is the time being spent?  My guess is
+  in iterating over rows and cols and lookup in occupied_rows and occupied_cols,
+  to determine how much to modify the Manhattan distances.  I wonder if it would
+  be faster to adjust all of the row and column numbers up front?
