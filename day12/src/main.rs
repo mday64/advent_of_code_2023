@@ -7,89 +7,83 @@ fn main() {
     println!("Part 1: {result1}");
     assert_eq!(result1, 7017);
 
-    let result2 = part2(input);
-    println!("Part 2: {result2}");
+    // let result2 = part2(input);
+    // println!("Part 2: {result2}");
     // assert_eq!(result2, 7017);
 }
 
-fn part1(input: &str) -> usize {
+fn part1(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
             let (pattern, groups) = line.split_once(' ').unwrap();
-            let num_questions = pattern.chars().filter(|c| c == &'?').count();
-            let groups: Vec<usize> = groups.split(',').map(|s| s.parse().unwrap()).collect();
+            let groups: Vec<u32> = groups.split(',').map(|s| s.parse().unwrap()).collect();
+            let num_questions = pattern.chars().filter(|c| c == &'?').count() as u32;
+            let num_hashes = groups.iter().sum::<u32>() - pattern.chars().filter(|c| c==&'#').count() as u32;
+            let num_dots = num_questions - num_hashes;
 
-            // Let's use brute force and ignorance!  Try all possible combinations
-            // of '.' and '#' for each question mark.  Then see if it matches the
-            // group lengths.
-            repeat_n(".#".chars(), num_questions)
-                .multi_cartesian_product()
-                .map(|combination| {
-                    let mut combination = combination.iter();
-                    let possibility = pattern
-                        .chars()
-                        .map(|c| {
-                            if c == '?' {
-                                *combination.next().unwrap()
-                            } else {
-                                c
-                            }
-                        })
-                        .collect_vec();
-                    possibility
-                        .iter()
-                        .group_by(|ch| ch == &&'#')
-                        .into_iter()
-                        .filter_map(|(key, group)| key.then_some(group.count()))
-                        .collect_vec()
-                })
-                .filter(|v| v == &groups)
-                .count()
+            count_valid_arrangements(pattern, num_hashes, num_dots, &groups)
         })
         .sum()
 }
 
-fn part2(input: &str) -> usize {
+fn part2(input: &str) -> u32 {
     input
         .lines()
         .map(|line| {
             let (pattern, groups) = line.split_once(' ').unwrap();
-            let groups: Vec<usize> = groups.split(',').map(|s| s.parse().unwrap()).collect();
+            let groups: Vec<u32> = groups.split(',').map(|s| s.parse().unwrap()).collect();
             // Pattern is repeated 5 times, separated by '?'
             let pattern = join(repeat_n(pattern, 5), "?");
             // Groups is repeated 5 times
             let groups = repeat_n(groups, 5).flatten().collect_vec();
-            let num_questions = pattern.chars().filter(|c| c == &'?').count();
 
-            // Let's use brute force and ignorance!  Try all possible combinations
-            // of '.' and '#' for each question mark.  Then see if it matches the
-            // group lengths.
-            repeat_n(".#".chars(), num_questions)
-                .multi_cartesian_product()
-                .map(|combination| {
-                    let mut combination = combination.iter();
-                    let possibility = pattern
-                        .chars()
-                        .map(|c| {
-                            if c == '?' {
-                                *combination.next().unwrap()
-                            } else {
-                                c
-                            }
-                        })
-                        .collect_vec();
-                    possibility
-                        .iter()
-                        .group_by(|ch| ch == &&'#')
-                        .into_iter()
-                        .filter_map(|(key, group)| key.then_some(group.count()))
-                        .collect_vec()
-                })
-                .filter(|v| v == &groups)
-                .count()
+            let num_questions = pattern.chars().filter(|c| c == &'?').count() as u32;
+            let num_hashes = groups.iter().sum::<u32>() - pattern.chars().filter(|c| c==&'#').count() as u32;
+            let num_dots = num_questions - num_hashes;
+
+            count_valid_arrangements(&pattern, num_hashes, num_dots, &groups)
         })
         .sum()
+}
+
+fn count_valid_arrangements(pattern: &str, num_hashes: u32, num_dots: u32, groups: &[u32]) -> u32 {
+    // Try replacing the first question mark with a hash or dot, and compute
+    // the number of valid arrangements for each.
+
+    // If there's nothing left to replace, it must match the given groups
+    if num_hashes == 0 && num_dots == 0 {
+        let pattern_groups = pattern.chars().group_by(|c| c==&'#').into_iter().filter_map(|(key, group)| key.then_some(group.count() as u32)).collect_vec();
+        if pattern_groups == groups {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    let mut result = 0;
+
+    if num_hashes > 0 {
+        let next_pattern = pattern.replacen('?', "#", 1);
+        result += count_valid_arrangements(&next_pattern, num_hashes-1, num_dots, groups);
+    }
+
+    if num_dots > 0 {
+        let next_pattern = pattern.replacen('?', ".", 1);
+        result += count_valid_arrangements(&next_pattern, num_hashes, num_dots-1, groups);
+    }
+
+    result
+}
+
+#[test]
+fn test_arrangements_1() {
+    assert_eq!(count_valid_arrangements("???.###", 2, 1, &[1,1,3]), 1);
+}
+
+#[test]
+fn test_arrangements_2() {
+    assert_eq!(count_valid_arrangements(".??..??...?##.", 3, 2, &[1,1,3]), 4);
 }
 
 #[cfg(test)]
