@@ -1,4 +1,6 @@
 use itertools::{repeat_n, join, Itertools};
+use rayon::prelude::*;
+use std::iter::zip;
 
 fn main() {
     let input = include_str!("../input.txt");
@@ -7,8 +9,8 @@ fn main() {
     println!("Part 1: {result1}");
     assert_eq!(result1, 7017);
 
-    // let result2 = part2(input);
-    // println!("Part 2: {result2}");
+    let result2 = part2(input);
+    println!("Part 2: {result2}");
     // assert_eq!(result2, 7017);
 }
 
@@ -29,8 +31,10 @@ fn part1(input: &str) -> u32 {
 
 fn part2(input: &str) -> u32 {
     input
-        .lines()
+        .par_lines()
         .map(|line| {
+            println!("{line}");
+
             let (pattern, groups) = line.split_once(' ').unwrap();
             let groups: Vec<u32> = groups.split(',').map(|s| s.parse().unwrap()).collect();
             // Pattern is repeated 5 times, separated by '?'
@@ -50,6 +54,13 @@ fn part2(input: &str) -> u32 {
 fn count_valid_arrangements(pattern: &str, num_hashes: u32, num_dots: u32, groups: &[u32]) -> u32 {
     // Try replacing the first question mark with a hash or dot, and compute
     // the number of valid arrangements for each.
+
+    // If the current pattern's initial groups don't match the given groups,
+    // then there can't be any arrangements, no matter how the substitutions
+    // happen.
+    if !zip(initial_groups(pattern), groups).all(|(a,b)| &a == b) {
+        return 0;
+    }
 
     // If there's nothing left to replace, it must match the given groups
     if num_hashes == 0 && num_dots == 0 {
@@ -71,6 +82,34 @@ fn count_valid_arrangements(pattern: &str, num_hashes: u32, num_dots: u32, group
     if num_dots > 0 {
         let next_pattern = pattern.replacen('?', ".", 1);
         result += count_valid_arrangements(&next_pattern, num_hashes, num_dots-1, groups);
+    }
+
+    result
+}
+
+fn initial_groups(pattern: &str) -> Vec<u32> {
+    let mut result = vec![];
+
+    let mut hashes = 0;
+    for c in pattern.chars() {
+        match c {
+            '.' => {
+                if hashes > 0 {
+                    result.push(hashes);
+                    hashes = 0;
+                }
+            }
+            '#' => {
+                hashes += 1;
+            }
+            '?' => {
+                // Don't try to count a partial group
+                break;
+            }
+            _ => {
+                panic!("invalid character in pattern");
+            }
+        }
     }
 
     result

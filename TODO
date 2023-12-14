@@ -37,9 +37,28 @@ Day 10
   to figure out which shape the pipe at "S" is, and use that shape for counting
   crossings.  When you hit a space that isn't part of the loop, count it as
   "inside" if there have been an odd number of crossings.
+
 Day 11
 ------
 * Part 1 is slow in debug mode.  Where is the time being spent?  My guess is
   in iterating over rows and cols and lookup in occupied_rows and occupied_cols,
   to determine how much to modify the Manhattan distances.  I wonder if it would
   be faster to adjust all of the row and column numbers up front?
+
+Day 12
+------
+I managed to make part 2 not glacially slow.  It's just painfully slow.
+Make it complete in a reasonable amount of time.
+
+Can I improve the "is this a valid suffix" check?  Perhaps include the
+first run of question marks and hashes, to come up with a range of possible
+group sizes?
+
+Sometimes there are runs of hashes.  These HAVE to line up with the group
+sizes.  Is it possible to then break up the pattern to before and after,
+then multiply those together?
+
+Would it help to construct the minimum length pattern that fits the group
+sizes (one dot separator), and then try to figure out where additional dots
+could be inserted (to create the same length as the pattern) and still
+match the pattern?
