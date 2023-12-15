@@ -144,3 +144,5 @@ north support beams is 64.
 Run the spin cycle for 1000000000 cycles. Afterward, what is the total
 load on the north support beams?
 
+Your puzzle answer was 96317.
+

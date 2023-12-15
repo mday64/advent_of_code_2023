@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use itertools::Itertools;
 
 fn main() {
     let input = include_str!("../input.txt");
@@ -9,7 +10,7 @@ fn main() {
 
     let result2 = part2(input);
     println!("Part 2: {result2}");
-    assert_eq!(result2, 107430);
+    assert_eq!(result2, 96317);
 }
 
 fn part1(input: &str) -> usize {
@@ -24,11 +25,14 @@ fn part1(input: &str) -> usize {
 // locations of all 'O' characters, or just the load value.  I'm going
 // to guess and say the load value is sufficient.
 //
+// It turns out that load value alone is insufficient.  I guess I'll
+// go with the raw state as a big String.
+//
 fn part2(input: &str) -> usize {
     let mut puzzle = Puzzle::from_str(input);
 
-    // key is load value, value is iteration seen
-    let mut history = HashMap::<usize, usize>::new();
+    // key is state (as a String), value is (iteration seen, load value)
+    let mut history = HashMap::<String, (usize, usize)>::new();
 
     for i in 0..1_000_000_000 {
         // Do the North, West, South, East tilts
@@ -37,19 +41,20 @@ fn part2(input: &str) -> usize {
         puzzle.tilt_south();
         puzzle.tilt_east();
 
-        // Compute the current load value
+        // Get the current state and load value
+        let state = puzzle.to_string();
         let load_value = puzzle.total_load();
 
-        println!("Iteration {i}: load_value={load_value}");
-        
+        // println!("Iteration {i}: load_value={load_value}");
+
         // See if we've seen this load value before
-        if let Some(prior) = history.get(&load_value) {
+        if let Some((prior, _load)) = history.get(&state) {
             let cycle_length = i - prior;
             let remainder = (999_999_999 - i) % cycle_length;
             // Return the key for value `prior + remainder`
-            return *history.iter().find(|(_k,v)| v == &&(prior + remainder)).unwrap().0;
+            return history.iter().find(|(_k,(i,_l))| i == &(prior + remainder)).unwrap().1.1;
         } else {
-            history.insert(load_value, i);
+            history.insert(state, (i, load_value));
         }
     }
     
@@ -69,6 +74,10 @@ impl Puzzle {
         let num_cols = grid[0].len();
         
         Puzzle { grid, num_rows, num_cols }
+    }
+
+    fn to_string(&self) -> String {
+        self.grid.iter().map(|v| v.iter().join("")).join("\n")
     }
 
     fn tilt_north(&mut self) {
