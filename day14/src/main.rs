@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use itertools::Itertools;
 
 fn main() {
     let input = include_str!("../input.txt");
@@ -31,8 +30,8 @@ fn part1(input: &str) -> usize {
 fn part2(input: &str) -> usize {
     let mut puzzle = Puzzle::from_str(input);
 
-    // key is state (as a String), value is (iteration seen, load value)
-    let mut history = HashMap::<String, (usize, usize)>::new();
+    // key is state, value is (iteration seen, load value)
+    let mut history = HashMap::<Puzzle, (usize, usize)>::new();
 
     for i in 0..1_000_000_000 {
         // Do the North, West, South, East tilts
@@ -41,31 +40,27 @@ fn part2(input: &str) -> usize {
         puzzle.tilt_south();
         puzzle.tilt_east();
 
-        // Get the current state and load value
-        let state = puzzle.to_string();
-        let load_value = puzzle.total_load();
-
-        // println!("Iteration {i}: load_value={load_value}");
-
-        // See if we've seen this load value before
-        if let Some((prior, _load)) = history.get(&state) {
+        // See if we've seen this state before
+        if let Some((prior, _load)) = history.get(&puzzle) {
             let cycle_length = i - prior;
             let remainder = (999_999_999 - i) % cycle_length;
             // Return the key for value `prior + remainder`
             return history.iter().find(|(_k,(i,_l))| i == &(prior + remainder)).unwrap().1.1;
         } else {
-            history.insert(state, (i, load_value));
+            history.insert(puzzle.clone(), (i, puzzle.total_load()));
         }
     }
     
     panic!("No cycle found!");
 }
 
+#[derive(PartialEq, Eq, Hash, Clone)]
 struct Puzzle {
     grid: Vec<Vec<char>>,
     num_rows: usize,
     num_cols: usize,
 }
+
 
 impl Puzzle {
     fn from_str(input: &str) -> Puzzle {
@@ -74,10 +69,6 @@ impl Puzzle {
         let num_cols = grid[0].len();
         
         Puzzle { grid, num_rows, num_cols }
-    }
-
-    fn to_string(&self) -> String {
-        self.grid.iter().map(|v| v.iter().join("")).join("\n")
     }
 
     fn tilt_north(&mut self) {
