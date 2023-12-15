@@ -29,6 +29,7 @@ fn part2(input: &str) -> usize {
 
     // key is load value, value is iteration seen
     let mut history = HashMap::<usize, usize>::new();
+
     for i in 0..1_000_000_000 {
         // Do the North, West, South, East tilts
         puzzle.tilt_north();
@@ -39,6 +40,8 @@ fn part2(input: &str) -> usize {
         // Compute the current load value
         let load_value = puzzle.total_load();
 
+        println!("Iteration {i}: load_value={load_value}");
+        
         // See if we've seen this load value before
         if let Some(prior) = history.get(&load_value) {
             let cycle_length = i - prior;
@@ -88,15 +91,60 @@ impl Puzzle {
     }
 
     fn tilt_south(&mut self) {
-        todo!()
+        for row in (0..self.num_rows-1).rev() {
+            for col in 0..self.num_cols {
+                // If this row/column has an 'O', try to shift it up as
+                // much as possible.
+                if self.grid[row][col] == 'O' {
+                    let mut r = row;
+                    while r < self.num_rows-1 && self.grid[r+1][col] == '.' {
+                        r += 1;
+                    }
+                    if r != row {
+                        self.grid[row][col] = '.';
+                        self.grid[r][col] = 'O';
+                    }
+                }
+            }
+        }
     }
 
     fn tilt_west(&mut self) {
-        todo!()
+        for col in 1..self.num_cols {
+            for row in 0..self.num_rows {
+                // If this row/column has an 'O', try to shift it up as
+                // much as possible.
+                if self.grid[row][col] == 'O' {
+                    let mut c = col;
+                    while c > 0 && self.grid[row][c-1] == '.' {
+                        c -= 1;
+                    }
+                    if c != col {
+                        self.grid[row][col] = '.';
+                        self.grid[row][c] = 'O';
+                    }
+                }
+            }
+        }
     }
 
     fn tilt_east(&mut self) {
-
+        for col in (0..self.num_cols-1).rev() {
+            for row in 0..self.num_rows {
+                // If this row/column has an 'O', try to shift it up as
+                // much as possible.
+                if self.grid[row][col] == 'O' {
+                    let mut c = col;
+                    while c < self.num_cols-1 && self.grid[row][c+1] == '.' {
+                        c += 1;
+                    }
+                    if c != col {
+                        self.grid[row][col] = '.';
+                        self.grid[row][c] = 'O';
+                    }
+                }
+            }
+        }
     }
 
     fn total_load(&self) -> usize {
