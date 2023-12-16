@@ -10,10 +10,14 @@ fn main() {
 
 fn part1(input: &str) -> usize {
     let grid: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
+    calculate_energized(grid, 0, 0, Direction::Right)
+}
+
+fn calculate_energized(grid: Vec<Vec<char>>, start_row: isize, start_col: isize, direction: Direction) -> usize {
     let num_rows = grid.len() as isize;
     let num_cols = grid[0].len() as isize;
     let mut energized: HashSet<(isize, isize, Direction)> = HashSet::new();
-    let mut beams = vec![(0, 0, Direction::Right)];
+    let mut beams = vec![(start_row, start_col, direction)];
 
     while let Some((row, col, dir)) = beams.pop() {
         // Follow this beam until it exits the grid, or we find a
