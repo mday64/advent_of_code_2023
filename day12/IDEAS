@@ -1,3 +1,9 @@
+//
+// Sort the lines of day12.txt, and create a bunch of test cases, some of which
+// are already fast, and some of which are very slow.  Use these to validate
+// the correctness of any additional optimizations.
+//
+
 Line 4 of my real input:
 
 ??.???#???? 1,4,1
@@ -34,3 +40,10 @@ least deduce a possible range?
 
 What about hashes and dots in the middle of the pattern?  Can we figure out how
 to try aligning them with the group lengths?
+
+Can we take advantage of knowing the part1 answer for a line to help calculate
+the part2 answer for that same line?  In particular, can we know that the
+separating question mark must be a dot, so we just raise part1's answer to
+the fifth power for part2?  (Having 1's at the start or end of a group list,
+or having question marks at the start and/or end of the pattern, tends to make
+for very large numbers of arrangements.)
