@@ -1,5 +1,4 @@
 use itertools::{repeat_n, join, Itertools};
-use rayon::prelude::*;
 use std::iter::zip;
 
 fn main() {
@@ -31,9 +30,10 @@ fn part1(input: &str) -> u32 {
 
 fn part2(input: &str) -> u32 {
     input
-        .par_lines()
-        .map(|line| {
-            println!("{line}");
+        .lines()
+        .enumerate()
+        .map(|(line_number, line)| {
+            let start_time = std::time::Instant::now();
 
             let (pattern, groups) = line.split_once(' ').unwrap();
             let groups: Vec<u32> = groups.split(',').map(|s| s.parse().unwrap()).collect();
@@ -46,7 +46,12 @@ fn part2(input: &str) -> u32 {
             let num_hashes = groups.iter().sum::<u32>() - pattern.chars().filter(|c| c==&'#').count() as u32;
             let num_dots = num_questions - num_hashes;
 
-            count_valid_arrangements(&pattern, num_hashes, num_dots, &groups)
+            let result = count_valid_arrangements(&pattern, num_hashes, num_dots, &groups);
+
+            let duration = start_time.elapsed().as_secs_f64();
+            println!("{duration:15.9}: {line_number:3} {line} -> {result}");
+
+            result
         })
         .sum()
 }
@@ -173,4 +178,17 @@ fn test_part2e() {
 #[test]
 fn test_part2f() {
     assert_eq!(part2("?###???????? 3,2,1"), 506250);
+}
+
+#[test]
+fn test_part2_line4() {
+    assert_eq!(part2("??.???#???? 1,4,1"), 5595385);
+}
+
+#[test]
+fn test_part2_line16() {
+    // I don't know the actual answer here, but I do know
+    // that it takes a very long time, and the answer must
+    // be very large.
+    assert_eq!(part2("..?.????#?????????? 1,1,1,1,1,4"), 0);
 }
