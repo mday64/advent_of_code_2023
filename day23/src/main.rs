@@ -5,7 +5,7 @@ fn main() {
 
     let result1 = part1(input);
     println!("Part 1: {result1}");
-    assert_eq!(result1, 0);
+    assert_eq!(result1, 2130);
 }
 
 //
@@ -19,13 +19,27 @@ fn main() {
 //
 fn part1(input: &str) -> u32 {
     let puzzle = parse_input(input);
-    for (src, v) in puzzle.neighbors {
+    for (src, v) in puzzle.neighbors.iter() {
         for (dest, dist) in v {
             println!("{src:?} -> {dest:?} in {dist} steps");
         }
     }
-    
-    0
+
+    longest_path(puzzle.start, &puzzle)
+}
+
+fn longest_path(src: Point, puzzle: &Puzzle) -> u32 {
+    if src == puzzle.end {
+        return 0;
+    }
+
+    puzzle.neighbors
+        .get(&src)
+        .unwrap()
+        .iter()
+        .map(|&(neighbor, dist)| dist + longest_path(neighbor, puzzle))
+        .max()
+        .unwrap()
 }
 
 struct Puzzle {

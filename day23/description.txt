@@ -83,3 +83,5 @@ taken were 90, 86, 82, 82, and 74 steps long.)
 Find the longest hike you can take through the hiking trails listed on
 your map. How many steps long is the longest hike?
 
+Your puzzle answer was 2130.
+
