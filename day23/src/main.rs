@@ -6,6 +6,10 @@ fn main() {
     let result1 = part1(input);
     println!("Part 1: {result1}");
     assert_eq!(result1, 2130);
+
+    let result2 = part2(input);
+    println!("Part 2: {result2}");
+    assert_eq!(result2, 6710);
 }
 
 //
@@ -18,7 +22,7 @@ fn main() {
 // gets to the exit.
 //
 fn part1(input: &str) -> u32 {
-    let puzzle = parse_input(input);
+    let puzzle = parse_input(input, true);
     // for (src, v) in puzzle.neighbors.iter() {
     //     for (dest, dist) in v {
     //         println!("{src:?} -> {dest:?} in {dist} steps");
@@ -42,13 +46,50 @@ fn longest_path(src: Point, puzzle: &Puzzle) -> u32 {
         .unwrap()
 }
 
+//
+// For part 2, we ignore the direction restrictions, and look for the
+// longest path that doesn't visit the same location twice.
+//
+fn part2(input: &str) -> u32 {
+    let puzzle = parse_input(input, false);
+    let mut visited = HashSet::from([puzzle.start]);
+    longest_path2(puzzle.start, &mut visited, &puzzle).expect("should have a solution")
+}
+
+fn longest_path2(src: Point, visited: &mut HashSet<Point>, puzzle: &Puzzle) -> Option<u32> {
+    if src == puzzle.end {
+        return Some(0);
+    }
+
+    // for _ in 0..visited.len() {
+    //     print!("    ");
+    // }
+    // println!("{src:?}");
+
+    puzzle.neighbors
+        .get(&src)
+        .unwrap()
+        .iter()
+        .filter_map(|(neighbor, dist)| {
+            if visited.contains(neighbor) {
+                None
+            } else {
+                visited.insert(*neighbor);
+                let result = longest_path2(*neighbor, visited, puzzle).map(|rest| dist+rest);
+                visited.remove(neighbor);
+                result
+            }
+        })
+        .max()
+}
+
 struct Puzzle {
     start: Point,
     end: Point,
     neighbors: HashMap<Point, Vec<(Point, u32)>>,
 }
 
-fn parse_input(input: &str) -> Puzzle {
+fn parse_input(input: &str, directed: bool) -> Puzzle {
     let grid: Vec<Vec<char>> = input.lines().map(|line| {
         line.chars().collect()
     }).collect();
@@ -101,7 +142,10 @@ fn parse_input(input: &str) -> Puzzle {
             // Follow the path to the next node, if any; find its length.
             // If we found a path to another node, insert it now.
             if let Some((dest, distance)) = path_in_direction(node, direction, &nodes, &grid) {
-                (*neighbors.get_mut(&node).unwrap()).push((dest, distance));
+                neighbors.get_mut(&node).unwrap().push((dest, distance));
+                if !directed {
+                    neighbors.get_mut(&dest).unwrap().push((node, distance));
+                }
             }
             
             // The starting point only has a path going down.  Don't bother
@@ -216,4 +260,9 @@ static EXAMPLE1: &str = "\
 #[test]
 fn test_part1() {
     assert_eq!(part1(EXAMPLE1), 94);
+}
+
+#[test]
+fn test_part2() {
+    assert_eq!(part2(EXAMPLE1), 154);
 }

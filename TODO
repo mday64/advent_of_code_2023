@@ -62,3 +62,9 @@ Would it help to construct the minimum length pattern that fits the group
 sizes (one dot separator), and then try to figure out where additional dots
 could be inserted (to create the same length as the pattern) and still
 match the pattern?
+
+Day 23
+------
+Part 2 is slow.  Is there a dynamic programming solution (perhaps like all-pairs
+shortest paths)?  If not, would trying to memoize the call to longest_path2
+help?
