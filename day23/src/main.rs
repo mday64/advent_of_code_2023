@@ -19,11 +19,11 @@ fn main() {
 //
 fn part1(input: &str) -> u32 {
     let puzzle = parse_input(input);
-    for (src, v) in puzzle.neighbors.iter() {
-        for (dest, dist) in v {
-            println!("{src:?} -> {dest:?} in {dist} steps");
-        }
-    }
+    // for (src, v) in puzzle.neighbors.iter() {
+    //     for (dest, dist) in v {
+    //         println!("{src:?} -> {dest:?} in {dist} steps");
+    //     }
+    // }
 
     longest_path(puzzle.start, &puzzle)
 }
@@ -72,15 +72,15 @@ fn parse_input(input: &str) -> Puzzle {
                         .filter(|&(r,c)| grid[r][c] != '#')
                         .count();
                     if num_neighbors > 2 {
-                        println!("({row},{col})");
+                        // println!("({row},{col})");
                         neighbors.insert((row, col), vec![]);
                     }
                 }
             }
         }
     }
-    println!("start=({},{})", start.0, start.1);
-    println!("end=({},{})", end.0, end.1);
+    // println!("start=({},{})", start.0, start.1);
+    // println!("end=({},{})", end.0, end.1);
     neighbors.insert(start, vec![]);
     neighbors.insert(end, vec![]);
 
@@ -117,7 +117,7 @@ fn parse_input(input: &str) -> Puzzle {
 fn path_in_direction(start: Point, direction: Direction, nodes: &HashSet<Point>, grid: &[Vec<char>]) -> Option<(Point, u32)> {
     use Direction::*;
 
-    println!("path_in_direction: start={start:?} direction={direction:?}");
+    // println!("path_in_direction: start={start:?} direction={direction:?}");
 
     let mut dest = start;
     let mut distance = 0;
@@ -149,10 +149,10 @@ fn path_in_direction(start: Point, direction: Direction, nodes: &HashSet<Point>,
                 }
             })?;
         
-        println!("    dir={dir:?} dest={dest:?}");
+        // println!("    dir={dir:?} dest={dest:?}");
         distance += 1;
         if nodes.contains(&dest) {
-            println!("-> Some(dest={dest:?}, distance={distance:?})");
+            // println!("-> Some(dest={dest:?}, distance={distance:?})");
             break Some((dest, distance));
         }
 
