@@ -63,6 +63,13 @@ sizes (one dot separator), and then try to figure out where additional dots
 could be inserted (to create the same length as the pattern) and still
 match the pattern?
 
+Day 18
+------
+Part 2 is a little slow (just under 5 seconds in release mode).  It could
+probably be made faster by processing entire rectangles at once by sorting
+horizontal lines, and then operating in windows of 2 to determine height
+of the rectangle.
+
 Day 23
 ------
 Part 2 is slow.  Is there a dynamic programming solution (perhaps like all-pairs

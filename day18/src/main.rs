@@ -7,6 +7,10 @@ fn main() {
     let result1 = part1(input);
     println!("Part 1: {result1}");
     assert_eq!(result1, 39039);
+
+    let result2 = part2(input);
+    println!("Part 2: {result2}");
+    assert_eq!(result2, 44644464596918);
 }
 
 fn part1(input: &str) -> i32 {
@@ -69,10 +73,74 @@ fn part1(input: &str) -> i32 {
     perimeter + interior
 }
 
+fn part2(input: &str) -> i64 {
+    let mut x = 0;
+    let mut y = 0;
+    let mut perimeter = 0;
+    let mut vertical_lines = vec![];
+    let mut horizontal_lines = vec![];
+
+    for line in input.lines() {
+        let hash = line.find('#').unwrap();
+        let distance = i64::from_str_radix(&line[(hash+1)..(hash+6)], 16).unwrap();
+        let direction = &line[(hash+6)..(hash+7)];
+        perimeter += distance;
+        match direction {
+            "3" => {
+                // println!("U {distance}");
+                vertical_lines.push(LineSegment{ends: (y-distance)..y, mid: x});
+                y -= distance;
+            }
+            "1" => {
+                // println!("D {distance}");
+                vertical_lines.push(LineSegment{ends: y..(y+distance), mid: x});
+                y += distance;
+            }
+            "2" => {
+                // println!("L {distance}");
+                horizontal_lines.push(LineSegment{ends: (x-distance)..x, mid: y});
+                x -= distance;
+            }
+            "0" => {
+                // println!("R {distance}");
+                horizontal_lines.push(LineSegment{ends: x..(x+distance), mid: y});
+                x += distance;
+            }
+            d => panic!("Unknown direction: {d}")
+        }
+    }
+
+    // Sort the vertical lines so we can traverse them from left to right.
+    vertical_lines.sort_unstable_by_key(|line| line.mid);
+
+    // Find the vertical bounds of the pit
+    let (top, bottom) = horizontal_lines.iter().map(|line| line.mid).minmax().into_option().unwrap();
+
+    // Compute the interior area
+    let mut interior = 0;
+    for y in (top+1)..bottom {
+        for (left,right) in vertical_lines
+            .iter()
+            .filter(|line| line.ends.contains(&y))
+            .tuples()
+        {
+            interior += right.mid - left.mid - 1;
+
+            // Subtract off horizontal lines that intersect
+            let h_range = left.mid..right.mid;
+            for line in horizontal_lines.iter().filter(|line| line.mid == y) {
+                interior -= h_range.intersect(&line.ends).count() as i64;
+            }
+        }
+    }
+
+    perimeter + interior
+}
+
 /// A horizontal or vertical line segment
-struct LineSegment {
-    ends: Range<i32>,   // Y for vertical, X for horizontal
-    mid: i32            // X for vertixal, Y for horizontal
+struct LineSegment<T> {
+    ends: Range<T>,   // Y for vertical, X for horizontal
+    mid: T            // X for vertixal, Y for horizontal
 }
 
 trait RangeIntersect {
@@ -106,6 +174,11 @@ U 2 (#7a21e3)
 #[test]
 fn test_part1() {
     assert_eq!(part1(EXAMPLE1), 62);
+}
+
+#[test]
+fn test_part2() {
+    assert_eq!(part2(EXAMPLE1), 952408144115);
 }
 
 #[cfg(test)]
