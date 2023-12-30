@@ -1,96 +1,88 @@
-use std::collections::HashSet;
+use std::ops::Range;
+use itertools::Itertools;
 
 fn main() {
     let input = include_str!("../input.txt");
 
     let result1 = part1(input);
     println!("Part 1: {result1}");
-    assert_eq!(result1, 37099); // too low
+    assert_eq!(result1, 39039);
 }
 
 fn part1(input: &str) -> i32 {
-    let mut lagoon: HashSet<(i32, i32)> = HashSet::new();
     let mut x = 0;
     let mut y = 0;
-    lagoon.insert((x, y));
+    let mut perimeter = 0;
+    let mut vertical_lines = vec![];
+    let mut horizontal_lines = vec![];
 
     for line in input.lines() {
         let mut fields = line.split(' ');
         let direction = fields.next().unwrap();
         let distance = fields.next().unwrap().parse::<i32>().unwrap();
-        let (dx, dy) = match direction {
-            "U" => (0, -1),
-            "D" => (0, 1),
-            "L" => (-1, 0),
-            "R" => (1, 0),
-            d => panic!("Unknown direction: {d}")
-        };
-        for _ in 0..distance {
-            x += dx;
-            y += dy;
-            lagoon.insert((x, y));
-        }
-    }
-
-    // Find the vertical bounds of the exterior
-    let mut min_y = 0;
-    let mut max_y = 0;
-    for &(_x, y) in lagoon.iter() {
-        if y < min_y {
-            min_y = y;
-        }
-        if y > max_y {
-            max_y = y;
-        }
-    }
-
-    //
-    // This is wrong.  Consider a shape like:
-    //
-    // #######.....
-    // #.....#.....
-    // #.....#.....
-    // ###...#.###. <-- 4
-    // ..##..###.## <-- 5
-    // ...#.......#
-    // ...#.......#
-    // ...#########
-    //
-    // On line 4, the first group of dots are interior, but the rest are
-    // exterior.  On line 5, the first two groups of dots are interior,
-    // but the last is exterior.  That's because there is a local minima
-    // or maxima on that line, so the horizontal part doesn't indicate
-    // a switch between interior and exterior.
-    //
-    // This feels like Day 10, Part 2.  Can we solve this with the
-    // "horizontal line test"?  That is, can we determine interior vs.
-    // exterior by keeping track of whether a horizontal line extends
-    // above and/or below a horizontal line?
-    //
-
-    let mut area = 0;
-    for y in min_y..=max_y {
-        let mut xs = lagoon.iter().filter_map(|&(x0,y0)| (y==y0).then_some(x0)).collect::<Vec<_>>();
-        xs.sort_unstable();
-        area += 1;
-        let mut x = xs[0];
-        let mut interior = false;
-        for &x2 in &xs[1..] {
-            if x2 == x + 1 {
-                area += 1;
-            } else {
-                interior = !interior;
-                if interior {
-                    area += x2 - x;
-                } else {
-                    area += 1;
-                }
+        perimeter += distance;
+        match direction {
+            "U" => {
+                vertical_lines.push(LineSegment{ends: (y-distance)..y, mid: x});
+                y -= distance;
             }
-            x = x2;
+            "D" => {
+                vertical_lines.push(LineSegment{ends: y..(y+distance), mid: x});
+                y += distance;
+            }
+            "L" => {
+                horizontal_lines.push(LineSegment{ends: (x-distance)..x, mid: y});
+                x -= distance;
+            }
+            "R" => {
+                horizontal_lines.push(LineSegment{ends: x..(x+distance), mid: y});
+                x += distance;
+            }
+            d => panic!("Unknown direction: {d}")
         }
     }
 
-    area
+    // Sort the vertical lines so we can traverse them from left to right.
+    vertical_lines.sort_unstable_by_key(|line| line.mid);
+
+    // Find the vertical bounds of the pit
+    let (top, bottom) = horizontal_lines.iter().map(|line| line.mid).minmax().into_option().unwrap();
+
+    // Compute the interior area
+    let mut interior = 0;
+    for y in (top+1)..bottom {
+        for (left,right) in vertical_lines
+            .iter()
+            .filter(|line| line.ends.contains(&y))
+            .tuples()
+        {
+            interior += right.mid - left.mid - 1;
+
+            // Subtract off horizontal lines that intersect
+            let h_range = left.mid..right.mid;
+            for line in horizontal_lines.iter().filter(|line| line.mid == y) {
+                interior -= h_range.intersect(&line.ends).count() as i32;
+            }
+        }
+    }
+
+    perimeter + interior
+}
+
+/// A horizontal or vertical line segment
+struct LineSegment {
+    ends: Range<i32>,   // Y for vertical, X for horizontal
+    mid: i32            // X for vertixal, Y for horizontal
+}
+
+trait RangeIntersect {
+    fn intersect(&self, other: &Self) -> Self;
+}
+
+impl<T: Ord + Copy> RangeIntersect for Range<T> {
+    fn intersect(&self, other: &Self) -> Self {
+        self.start.max(other.start) .. self.end.min(other.end)
+    }
 }
 
 #[cfg(test)]
