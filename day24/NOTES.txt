@@ -1,0 +1,120 @@
+Advent of Code 2023 Day 24 Part 2
+
+19, 13, 30 @ -2,  1, -2
+18, 19, 22 @ -1, -1, -2
+20, 25, 34 @ -2, -2, -4
+12, 31, 28 @ -1, -2, -1
+20, 19, 15 @  1, -5, -3
+
+Can we start with two hailstones and somehow narrow down the locations of possible collisions?
+
+Let's call the rock's initial position (x,y,z), and velocity (vx,vy,vz).
+Let's start with the first two hailstones in the list.
+Suppose the time of the collision with the first one is t1, and the second one is t2.
+
+x + t1*vx = 19 + t1*(-2)
+y + t1*vy = 13 + t1*(1)
+z + t1*vz = 30 + t1*(-2)
+
+x + t2*vx = 18 + t2*(-1)
+y + t2*vy = 19 + t2*(-1)
+z + t2*vz = 22 + t2*(-2)
+
+That's 6 equations in 8 unknowns.
+
+What if we add the third hailstone?
+
+x + t3*vx = 20 + t3*(-2)
+y + t3*vx = 25 + t3*(-2)
+z + t3*vz = 34 + t3*(-4)
+
+We now have 9 equations in 9 unknowns.
+
+If we add the fourth hailstone, we have 12 equations in 10 unknowns.
+
+The problem is that they are not linear equations with fixed coefficients.
+Some of our unknowns are being multiplied together.  And I suspect there's not enough
+to constrain our times being strictly positive.  For example, in the example solution,
+why couldn't the rock start at the same position as the last hailstone?  The collision
+would be at time 0.  I think the assumption is that all times have to be strictly positive.
+And it does say that the starting position and velocity must have integer coordinates.
+
+Let's rewrite the equations for the first three hailstones, and see what I can do to try
+to solve it by hand.
+
+x + t1*vx + 2*t1 -19 = 0 => t1*(vx + 2) = -x + 19
+y + t1*vy - t1 - 13 = 0 => t1*(vy - 1) = -y + 13
+z + t1*vz + 2*t1 - 30 = 0 => t1*(vz+2) = -z + 30
+
+Add all three equations:
+t1*(vx + vy + vz + 3) = -(x + y + z) + 62
+
+And the second hailstone:
+t2*(vx + vy + vz + 4) = -(x + y + z) + 59
+
+The third hailstone:
+t3*(vx + vy + vz + 8) = -(x + y + z) + 79
+
+Subtract the second one from first one:
+(t1 - t2)(vx + vy + vz) + 3t1 - 4t2 = 3
+
+Subtract the third from the second:
+(t2 - t3)(vx + vy + vz) + 4t2 - 8t3 = -20
+
+Subtract the third from the first:
+(t1 - t3)(vx + vy + vz) + 3t1 - 8t3 = -17
+
+NOTE: (x + y + z) is the quantity we're trying to find.  We don't necessarily need to find
+the individual coordinates.  Can we solve for P = (x + y + z)?
+
+P = -t1*(V + 3) + 62
+P = -t2*(V + 4) + 59
+P = -t3*(V + 8) + 79
+P = -t4*(V + 4) + 71
+P = -t5*(V + 7) + 54
+
+I don't see a pattern that would help solve for P, or even try to sort the times.
+
+Is this a "center of mass" type of problem?  What happens if we add up the velocities, to
+see which direction the center of mass is going (would have to divide by the number of
+hailstones, I think)?
+
+dx = -2 -1 -2 -1 +1 = -5
+dy = 1 -1 -2 -2 -5 = -9
+dz = -2 -2 -4 -1 -3 = -12
+
+But the actual velocity is (-3, 1, 2)
+
+The sum of positions (center of mass, but without the division) is:
+px = 19 18 20 12 20 = 89
+py = 13 19 25 31 19 = 107
+pz = 30 22 34 28 15 = 129
+
+As time passes, those p values change like:
+px = 89 -> 84 -> 79 -> 74 -> 69 -> 64 -> 59 -> 54 -> ...
+py = 107 -> 98 -> 89 -> 80 -> 71 -> 62 -> 53 -> 44 -> ...
+pz = 129 -> 117 -> 105 -> 93 -> 81 -> 69 -> 57 -> 45 -> ...
+I'm not seeing a pattern.
+
+Looking at the 2nd an 4th equations, they both have (V + 4).  If we then look at the last
+constant (59 vs 71), I'd guess that t4 > t2.  For the 3rd and 5th, V + 8 is almost V + 7;
+comparing 79 and 54, I'd guess that t5 < t3.  With 1st and 2nd, I'd be tempted to guess
+t1 > t2.
+
+I wonder if this is a linear programming question?  Or maybe solved in a similar way?
+Take a guess at an answer, and then try a slight adjustment to see if it gives a "better"
+answer.  But what's better?  Do we guess at their relative time order, and guess that it
+is one tick between?  Then see if there is a pattern in the change of X, Y, Z between
+adjacent stones?  (How would we account for time steps that have no collision?)
+
+In the example, note that most of the X values are clustered together from 18-20, but the
+4th is much further away at 12.  It also has a relatively small (in absolute value) X
+velocity.  That suggests it is one of the later collisions.
+
+The 3rd and 5th have the same initial X = 20.  One has a large negative velocity (-2); the
+other has a smaller positive velocity (+1).  That's an absolute difference of 3.
+
+The 2nd and 5th have the same initial Y = 19, and Y velocity -1 and -5, respectively.  That's
+an absolute difference of 4.
+
+There are no duplicate Z values.
