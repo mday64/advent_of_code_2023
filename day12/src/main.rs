@@ -33,6 +33,7 @@ fn part2(input: &str) -> u32 {
     input
         .lines()
         .enumerate()
+        .par_bridge()
         .map(|(line_number, line)| {
             let start_time = std::time::Instant::now();
 
