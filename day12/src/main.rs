@@ -1,5 +1,6 @@
 use itertools::{repeat_n, join, Itertools};
 use std::iter::zip;
+use rayon::prelude::*;
 
 fn main() {
     let input = include_str!("../input.txt");
@@ -32,6 +33,7 @@ fn part2(input: &str) -> u32 {
     input
         .lines()
         .enumerate()
+        .par_bridge()
         .map(|(line_number, line)| {
             let start_time = std::time::Instant::now();
 
@@ -183,6 +185,16 @@ fn test_part2f() {
 #[test]
 fn test_part2_line4() {
     assert_eq!(part2("??.???#???? 1,4,1"), 5595385);
+}
+
+#[test]
+fn test_part2_line73() {
+    assert_eq!(part2("????#?#??????#??? 1,3,1,1,4"), 32692514);
+}
+
+#[test]
+fn test_part2_line121() {
+    assert_eq!(part2(".??????????????#??? 1,7,5,1"), 705862);
 }
 
 #[test]
