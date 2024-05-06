@@ -1,6 +1,6 @@
 use itertools::{repeat_n, join, Itertools};
-use rayon::prelude::*;
 use std::iter::zip;
+use std::collections::HashMap;
 
 fn main() {
     let input = include_str!("../input.txt");
@@ -9,9 +9,11 @@ fn main() {
     println!("Part 1: {result1}");
     assert_eq!(result1, 7017);
 
+    let start_time = std::time::Instant::now();
     let result2 = part2(input);
-    println!("Part 2: {result2}");
-    // assert_eq!(result2, 7017);
+    let duration = start_time.elapsed().as_secs_f64();
+    println!("Part 2: {result2} in {duration:.9} seconds");
+    assert_eq!(result2, 527570479489);
 }
 
 fn part1(input: &str) -> u32 {
@@ -29,14 +31,12 @@ fn part1(input: &str) -> u32 {
         .sum()
 }
 
-fn part2(input: &str) -> u32 {
+fn part2(input: &str) -> u64 {
     input
         .lines()
         .enumerate()
-        .par_bridge()
-        .map(|(line_number, line)| {
-            let start_time = std::time::Instant::now();
-
+        //.par_bridge()
+        .map(|(_line_number, line)| {
             let (pattern, groups) = line.split_once(' ').unwrap();
             let groups: Vec<u32> = groups.split(',').map(|s| s.parse().unwrap()).collect();
             // Pattern is repeated 5 times, separated by '?'
@@ -48,14 +48,80 @@ fn part2(input: &str) -> u32 {
             let num_hashes = groups.iter().sum::<u32>() - pattern.chars().filter(|c| c==&'#').count() as u32;
             let num_dots = num_questions - num_hashes;
 
-            let result = count_valid_arrangements(&pattern, num_hashes, num_dots, &groups);
-
-            let duration = start_time.elapsed().as_secs_f64();
-            println!("{duration:15.9}: {line_number:3} {line} -> {result}");
+            //let result = count_valid_arrangements(&pattern, num_hashes, num_dots, &groups);
+            let mut cache = HashMap::new();
+            let result = count_matches(pattern.as_bytes(), &groups, 0, 0, num_dots, &mut cache);
 
             result
         })
         .sum()
+}
+
+fn count_matches(
+    pattern: &[u8], groups: &[u32],
+    pattern_offset: usize, group_offset: usize,
+    num_dots: u32,
+    cache: &mut HashMap<(usize, usize), u64>
+) -> u64 {
+    if let Some(result) = cache.get(&(pattern_offset, group_offset)) {
+        return *result
+    }
+    
+    let orig_pattern_offset = pattern_offset;
+    let mut pattern_offset = pattern_offset;
+    let mut num_dots = num_dots;
+    let mut result = 0;
+
+    assert!(pattern_offset <= pattern.len());
+    assert!(group_offset <= groups.len());
+
+    // If we have used up all the groups, then the remainder of the pattern must
+    // not contain any hashes.
+    if group_offset == groups.len() {
+        for c in &pattern[pattern_offset..] {
+            if *c as char == '#' {
+                // Impossible match
+                cache.insert((orig_pattern_offset, group_offset), 0);
+                return 0;
+            }
+        }
+        // It was all dots or question marks, or empty
+        cache.insert((orig_pattern_offset, group_offset), 1);
+        return 1;
+    }
+
+    // Skip over leading dots in the remaining pattern
+    while pattern_offset < pattern.len() && pattern[pattern_offset] as char  == '.' {
+        pattern_offset += 1;
+    }
+    assert!(pattern_offset < pattern.len());
+
+    if num_dots > 0 && pattern[pattern_offset] as char == '?' {
+        // Try using the question mark as a dot
+        result += count_matches(pattern, groups, pattern_offset+1, group_offset, num_dots-1, cache);
+    }
+
+    // Try to match the next group at the start of the remaining pattern.
+    // The next group_len bytes of the pattern must not contain a dot.
+    // If there is more pattern after that, it must not be a hash.
+    let group_len = groups[group_offset] as usize;
+    assert!(pattern.len() - pattern_offset >= group_len);
+    if pattern[pattern_offset..pattern_offset+group_len].iter().all(|c| *c as char != '.') {
+        let match_offset = pattern_offset;
+        pattern_offset += group_len;
+        if pattern_offset == pattern.len() || pattern[pattern_offset] as char == '.' || (num_dots > 0 && pattern[pattern_offset] as char != '#') {
+            if pattern_offset < pattern.len() {
+                if pattern[pattern_offset] as char == '?' {
+                    num_dots -= 1;
+                }
+                pattern_offset += 1;
+            }
+            result += count_matches(pattern, groups, pattern_offset, group_offset+1, num_dots, cache);
+        }
+    }
+
+    cache.insert((orig_pattern_offset, group_offset), result);
+    result
 }
 
 fn count_valid_arrangements(pattern: &str, num_hashes: u32, num_dots: u32, groups: &[u32]) -> u32 {
