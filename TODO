@@ -70,6 +70,16 @@ probably be made faster by processing entire rectangles at once by sorting
 horizontal lines, and then operating in windows of 2 to determine height
 of the rectangle.
 
+Day 20
+------
+Part 2 is a huge number of iterations.  Do I need to examine the logic of
+the input to determine what it's doing, so I can calculate the answer directly?
+I'm betting that the answer is something like the product of several large
+numbers (where conjunction modules perform a logical AND operation).
+
+Or do I need to detect cycles in the various states?  If so, how do I know
+which ones
+
 Day 23
 ------
 Part 2 is slow.  Is there a dynamic programming solution (perhaps like all-pairs
