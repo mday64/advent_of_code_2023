@@ -1,3 +1,10 @@
+Not Yet Completed:
+------------------
+Day 21, Part 2
+Day 22, Part 1 and Part 2
+Day 24, Part 2
+Day 25
+
 General
 -------
 Add time and memory profiling.
@@ -79,6 +86,128 @@ numbers (where conjunction modules perform a logical AND operation).
 
 Or do I need to detect cycles in the various states?  If so, how do I know
 which ones
+
+Day 21
+------
+Part 2 is a dramatically larger problem.  I don't think it's possible
+to keep track of the entire map.  (In the example, 5000 steps lead to
+almost 17 million destinations.  The full answer requires 26.5 million
+steps.)
+
+Looking at my input, the rocks (inaccessible locations) are sparse.  Garden
+plots (accessible locations) are well connected.  There do not appear to
+be any rocks along the edges.
+
+Assumption: I'm betting that after enough iterations (steps), any garden
+plot near enough to the starting point can be reached on every iteration.
+That is, there might be enough possible paths that end up at a given location
+no matter how many more steps are taken.  This may not be the case for
+locations near the outer edge of the solution (the "frontier").  In the
+example input, after a few steps, you can only reach every other location.
+
+A "brute force with compression" solution might look like this:
+* The infinite map is broken down into "sections" (copies of the original map).
+* Keep track of sections based on their distance, in sections, from the
+  starting section.
+* For each section, keep track of which garden plots are reachable in the
+  current or next iteration.
+* Once all garden plots are reachable, this section is "saturated."  Its
+  state will (presumably) not change ever again, so we can avoid tracking
+  every occupied garden plot.
+* If a saturated section has non-saturated neighbor sections, we still have
+  to simulate new steps onto all of the edge locations of the neighbor.
+* Once a section and all of its neighbor sections are saturated (let's call
+  the middle section "super-saturated"), we don't have to simulate anything
+  for that section, not even steps into neighbor sections.  We can just keep
+  track of the fact that this section is (super-)saturared.  (Maybe we
+  could just keep a count of super-saturated sections?  Would need to be
+  careful about trying to simulate steps from a non-saturared section to
+  a saturated section.)
+* On each iteration, if the section is super-saturated, do nothing.  If
+  the section is saturared, only track steps into neighboring, non-
+  saturated sections.  If the section is not saturated, track steps within
+  the section, and steps into neighboring, non-saturated sections.
+* When we notice a section is super-saturated, we could just remove it from
+  the data structure of active sections, and add its number of garden plots
+  to the solution answer.
+
+The above assumption is wrong.  If I try the input surrounded by an infinte
+number of open garden plots, the number of reachable locations within the
+original input area eventually oscillates between two values.  Since moves
+are always up/down/left/right, there is no way to have a path from a given
+location, back to that location, in an odd number of steps.  Every left must
+be balanced by a right, and vice versa.  Same for up/down.  If a location
+is reachable in N steps, it will be reachable in N+2, N+4, ..., steps by
+moving to an adjacent non-rock location and back.
+
+That means that the problem becomes figuring out the number of steps that a
+location first becomes reachable.  Any location with the same or smaller step
+count, and the same odd/even-ness (my input is an odd number of steps), will
+be reachable in the final step.
+
+Note that stepping from one section to the nearest location in an adjacent
+section is one step, and so changes the even/odd-ness.
+
+There will be many sections sufficiently close to the initial section that
+every location in that section is reachable in either S or S-1 steps (where
+S is the total number of steps in the problem statement).  For those locations,
+we only care about whether they are odd or even.  Really, we probably only
+need to keep track of the *number* of odds and evens.
+
+The hard part will be sections along the outer edge.  Here, the minimum path
+length from the starting point matters.  At least with my input, you can
+keep moving in one direction (up/down/left/right) until you hit an edge,
+without hitting any rocks.  So there is one location on each edge with a
+minimal path length from the starting location.  The adjacent location in
+the adjacent section is the minimal path length into that section (at least
+from that edge).
+
+What about sections that are not in a single direction from the starting
+section?  For example, 3 sections up and 2 sections left?  Since the edges
+of each section are never rocks, it doesn't matter if you move left/right
+first or up/down first; you'll get to the nearest corner in the same number
+of steps.  Moving between sections is purely a matter of Manhattan distance
+to the nearest edge/corner.  From there, you just need to count how many
+steps to any non-rock interior location.
+
+In my input, the starting location is exactly in the middle of the input.
+There are an odd number of rows/columns on an side of the start.  That
+means that the nearest edge or corner of an adjacent section is an even
+number of steps.  That means I don't need to track the odd/even-ness
+of the number of sections from the starting section.
+
+I wonder if there are any interior locations that have a longer path length
+from the nearest edge/corner than the furthest corner does?  Rocks
+seem relatively sparse, so I doubt it.  That would let us test the furthest
+corner; if it is within the total steps, then all non-rock locations are.
+
+For all sections where the nearest corner/edge is within the number of steps,
+but the furthest corner isn't, we have to explicitly count the number of
+locations reachable from the nearest corner/edge.  This can be precomputed
+for all 8 possible starting corners/edges.
+
+Recall that for Manhattan distance, equal distance looks like a diamond
+(square titled 45 degrees).  So all sections completely inside the
+number of steps will form a filled-in diamond; just compute how many
+sections, and multiply by the number of reachable locations in an odd
+number of steps (at least for my problem statement).
+
+So, I think a solution looks like:
+* Assert that starting point is exactly the middle of the input.
+* Assert no rocks from start to each edge (moving in a single direction).
+* Assert no rocks on any edge.
+* Compute minimum path lengths for every interior location, starting from
+  each of the corners and sides.  Assert no interior locations have a longer
+  path length than furthest corner (starting from each edge and corner).
+* Compute the distance in sections, where the furthest corner is within
+  the input number of steps.  Compute how many such sections there are.
+  Multiply by number of locations reachable in an odd number of steps.
+* Iterate over all sections that are only partially reachable.  Determine
+  the closest point (edge or corner) and its number of steps.  Iterate
+  through path lengths for interior locations from that starting point,
+  and count how many are reachable (less or equal, and odd).
+* Add up those numbers and return it.
+
 
 Day 23
 ------
