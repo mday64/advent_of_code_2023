@@ -95,7 +95,7 @@ fn part1(input: &str, steps: u32) -> usize {
 // numbers of reachable locations, and we have to figure out how many sections
 // of each to add.
 //
-fn part2(input: &str, steps: u32) -> usize {
+fn part2(input: &str, steps: usize) -> usize {
     // Note: the input grid repeats infinitely in all directions.
     // Note: the outer edges of the grid are never rocks.
     let mut start = None;
@@ -151,6 +151,7 @@ fn part2(input: &str, steps: u32) -> usize {
     // to the starting point, would be the middle of the right edge.
     // The value is a vector of the number of steps to every non-rock.
     let mut reachable_from = HashMap::<(isize, isize), Vec<usize>>::new();
+    reachable_from.insert((0, 0), shortest_paths(start, start, dimension, &rocks));
     reachable_from.insert((0, 1), shortest_paths(start, 0, dimension, &rocks));
     reachable_from.insert((0, -1), shortest_paths(start, dimension-1, dimension, &rocks));
     reachable_from.insert((1, 0), shortest_paths(0, start, dimension, &rocks));
@@ -160,8 +161,51 @@ fn part2(input: &str, steps: u32) -> usize {
     reachable_from.insert((1, -1), shortest_paths(0, dimension-1, dimension, &rocks));
     reachable_from.insert((1, 1), shortest_paths(0, 0, dimension, &rocks));
 
-    // Do we also need number of steps from start (middle of section) to
-    // the remainder of the section?  Or do we just need to know odd/even?
+    // Calculate how many locations are reachable with an even or odd number
+    // number of steps.
+    // TODO: Since every corner and edge is reachable from the center,
+    // the even and odd counts contain only two values.  The counts for
+    // the center origin and corner origins are all the same.  The counts
+    // for the edge origins are swapped odd <-> even.
+    let mut even_counts = HashMap::<(isize, isize), usize>::new();
+    let mut odd_counts = HashMap::<(isize, isize), usize>::new();
+    for (&(dr, dc), v) in reachable_from.iter() {
+        let mut num_even = 0;
+        let mut num_odd = 0;
+        for n in v {
+            if n & 1 == 1 {
+                num_odd += 1;
+            } else {
+                num_even += 1;
+            }
+        }
+        even_counts.insert((dr, dc), num_even);
+        odd_counts.insert((dr, dc), num_odd);
+    }
+    let counts = [even_counts, odd_counts];
+
+    // For a section with a Manhattan distance of N from the starting section,
+    // all steps are strictly less than (N+1) * dimension.  So, for S steps,
+    // all sections with a distance less than (S+1)/dimension are fully reachable.
+    // Start by assuming that everything in the starting section is reachable.
+    // TODO: The loop below could be replaced by a closed form expression
+    // based on sums of 1..N, and sums of odd or even numbers in 1..N.
+    let mut parity = steps & 1;
+    assert!(steps as isize >= dimension);
+    let mut result = counts[parity][&(0, 0)];
+    for section_distance in 1..((steps + 1)/dimension as usize) {
+        parity = 1 - parity;
+        let counts = &counts[parity];
+        // For the sections at distance N > 0 from the starting section,
+        // there are exactly one each of sections directly up, down, left, right
+        // (that is, whose nearest location is an edge); and N-1 sections in
+        // each of the four quadrants (whose nearest location is a corner).
+        result += counts[&(0, 1)] + counts[&(1, 0)] + counts[&(0, -1)] + counts[&(-1, 0)];
+        result += (section_distance - 1) * (counts[&(1, 1)] + counts[&(-1, 1)] + 
+                        counts[&(-1, -1)] + counts[&(1, -1)]);
+    }
+
+
     // The distance from an edge to opposite corner (either one!) is
     //      start + section_size - 1
     // The distance from one corner to opposite corner is
@@ -171,14 +215,11 @@ fn part2(input: &str, steps: u32) -> usize {
     // The distance from starting location to diagonally adjacent section corner is
     //      2 * (start + 1)
 
-    // Calculate the range of sections that are entirely reachable in the given
-    // number of steps.  Multiply by the number of reachable locations per section.
-
     // For each section that is partially reachable, count how many locations
     // are reachable from the nearest edge or corner in the remaining number
     // of steps.
 
-    0
+    result
 }
 
 fn shortest_paths(row: isize, col: isize, dimension: isize, rocks: &HashSet<(isize, isize)>) -> Vec<usize> {
@@ -198,19 +239,7 @@ fn shortest_paths(row: isize, col: isize, dimension: isize, rocks: &HashSet<(isi
         }
     }
 
-    // for r in 0..dimension {
-    //     for c in 0..dimension {
-    //         match result.get(&(r,c)) {
-    //             None => print!("    #"),
-    //             Some(dist) => print!("{:5?}", dist)
-    //         }
-    //     }
-    //     println!();
-    // }
-
-    let result: Vec<_> = result.values().cloned().collect();
-    println!("{}", result.iter().max().unwrap());
-    result
+    result.values().cloned().collect()
 }
 
 #[cfg(test)]
