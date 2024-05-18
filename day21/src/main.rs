@@ -205,19 +205,39 @@ fn part2(input: &str, steps: usize) -> usize {
                         counts[&(-1, -1)] + counts[&(1, -1)]);
     }
 
-
-    // The distance from an edge to opposite corner (either one!) is
-    //      start + section_size - 1
-    // The distance from one corner to opposite corner is
-    //      2 * (section_size - 1)
-    // The distance from starting location to non-diagonal adjacent section edge is
-    //      start + 1
-    // The distance from starting location to diagonally adjacent section corner is
-    //      2 * (start + 1)
-
     // For each section that is partially reachable, count how many locations
     // are reachable from the nearest edge or corner in the remaining number
     // of steps.
+    parity = 1 - parity;
+    let section_distance = (steps + 1) / dimension as usize;
+    // Purely up/down/left/right
+    let min_steps = start as usize + 1 + (section_distance - 1) * dimension as usize;
+    assert!(min_steps <= steps);
+    let remaining_steps = steps - min_steps;
+    assert!(remaining_steps < dimension as usize);
+    for origin in [(0, 1), (0, -1), (1, 0), (-1, 0)] {
+        let reachable = &reachable_from[&origin];
+        for dist in reachable {
+            let total_steps = min_steps + dist;
+            if total_steps <= steps && (total_steps & 1) == parity {
+                result += 1;
+            }
+        }
+    }
+    // Some kind of diagonal
+    let min_steps = 2 * (start as usize + 1) + (section_distance - 1) * dimension as usize;
+    assert!(min_steps <= steps);
+    let remaining_steps = steps - min_steps;
+    assert!(remaining_steps < dimension as usize);
+    for origin in [(1, 1), (1, -1), (-1, -1), (-1, 1)] {
+        let reachable = &reachable_from[&origin];
+        for dist in reachable {
+            let total_steps = min_steps + dist;
+            if total_steps <= steps && (total_steps & 1) == parity {
+                result += section_distance - 1;
+            }
+        }
+    }
 
     result
 }
