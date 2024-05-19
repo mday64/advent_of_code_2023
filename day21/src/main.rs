@@ -9,7 +9,9 @@ fn main() {
 
     let result2 = part2(input, 26_501_365);
     println!("Part 2: {result2}");
-    // assert_eq!(result2, 0);
+    // 610315846454025 is too low
+    // 610316615797122 is too low
+    // assert_eq!(result2, 610316615797122);
 }
 
 fn part1(input: &str, steps: u32) -> usize {
@@ -238,6 +240,63 @@ fn part2(input: &str, steps: usize) -> usize {
     }
     println!("Starting section plus cardinal sections: {}", result);
     assert_eq!(result, 6033799933);
+
+    // Count the locations reachable from sections not in the same row or column
+    // as the starting section.
+    //
+    // The closest such sections are diagonally adjacent.  Their origin (closest
+    // location) is 2 * (start + 1) == dimension + 1 from the starting location.
+    // Their furthest location is 2 * (start + 1) + 2 * (dimension - 1) ==
+    // 2 * (start + dimension) == 3 * dimension - 1. There are 4 such sections,
+    // 1 in each quadrant.  These have the same parity as the starting section.
+    //
+    // The next closest sections are exactly one section away.  The closest
+    // location is 2 * dimension + 1.  The furthest is 4 * dimension - 1.
+    // There are two such sections per quadrant (two rows and one column, or
+    // one row and two columns from the starting section).
+    //
+    // To figure out the furthest diagonal completely within `steps`
+    // (where N is the number of sections per quadrant):
+    // (N + 2) * dimension - 1 <= steps
+    // (N + 2) * dimension <= steps + 1
+    // N + 2 <= (steps + 1) / dimension     // integer division rounds down
+    // N <= (steps + 1) / dimension - 2
+    //
+    // The diagonals with 1, 3, 4, 5, ..., N sections per quadrant have the
+    // same parity as the starting section.  The diagonals with 2, 4, 6, ..., N
+    // sections per quadrant have the opposite parity.
+    //
+    // The sum of odd numbers from 1 to 2k-1, inclusive, is k^2.
+    // The sum of even numbers from 2 to 2k, inclusive, is k(k+1).
+    //
+    // TODO: Instead of looping over full sections, use a closed form
+    // expression (sum of all even/odd numbers).
+    parity = steps & 1;
+    let mut min_steps = 2 * dimension + 1;
+    let mut max_steps = 3 * dimension - 1;
+    let mut diagonal_length = 1;
+    while max_steps <= steps {
+        result += counts[parity][&(1, 1)] * diagonal_length * 4;
+        diagonal_length += 1;
+        min_steps += dimension;
+        max_steps += dimension;
+        parity = 1 - parity;
+    }
+    while min_steps <= steps {
+        for origin in [(1, 1), (1, -1), (-1, 1), (-1, -1)] {
+            for dist in &reachable_from[&(origin)] {
+                let total_steps = min_steps + dist;
+                if total_steps <= steps && (total_steps ^ steps) & 1 == 0 {
+                    result += diagonal_length;
+                }
+            }
+        }
+        
+        diagonal_length += 1;
+        min_steps += dimension;
+    }
+    println!("Including diagonal sections: {}", result);
+    assert_eq!(result, 610316615797122);
 
     result
 }
