@@ -9,7 +9,7 @@ fn main() {
 
     let result2 = part2(input, 26_501_365);
     println!("Part 2: {result2}");
-    assert_eq!(result2, 0);
+    // assert_eq!(result2, 0);
 }
 
 fn part1(input: &str, steps: u32) -> usize {
@@ -106,15 +106,15 @@ fn part2(input: &str, steps: usize) -> usize {
     for (row, line) in input.lines().enumerate() {
         for (col, ch) in line.chars().enumerate() {
             if ch == 'S' {
-                start = Some((row as isize, col as isize));
+                start = Some((row, col));
             } else if ch == '#' {
-                rocks.insert((row as isize, col as isize));
+                rocks.insert((row, col));
             }
         }
     }
     let start = start.expect("should find the starting point");
-    let num_rows = input.lines().count() as isize;
-    let num_cols = input.lines().next().unwrap().len() as isize;
+    let num_rows = input.lines().count();
+    let num_cols = input.lines().next().unwrap().len();
 
     // The starting position should be exactly in the middle of the input.
     assert!(num_rows & 1 == 1);
@@ -184,65 +184,42 @@ fn part2(input: &str, steps: usize) -> usize {
     }
     let counts = [even_counts, odd_counts];
 
-    // For a section with a Manhattan distance of N from the starting section,
-    // all steps are strictly less than (N+1) * dimension.  So, for S steps,
-    // all sections with a distance less than (S+1)/dimension are fully reachable.
-    // Start by assuming that everything in the starting section is reachable.
-    // TODO: The loop below could be replaced by a closed form expression
-    // based on sums of 1..N, and sums of odd or even numbers in 1..N.
+    // Count the locations reachable in the starting section
     let mut parity = steps & 1;
-    assert!(steps as isize >= dimension);
+    assert!(steps >= dimension);
     let mut result = counts[parity][&(0, 0)];
-    for section_distance in 1..((steps + 1)/dimension as usize) {
-        parity = 1 - parity;
-        let counts = &counts[parity];
-        // For the sections at distance N > 0 from the starting section,
-        // there are exactly one each of sections directly up, down, left, right
-        // (that is, whose nearest location is an edge); and N-1 sections in
-        // each of the four quadrants (whose nearest location is a corner).
-        result += counts[&(0, 1)] + counts[&(1, 0)] + counts[&(0, -1)] + counts[&(-1, 0)];
-        result += (section_distance - 1) * (counts[&(1, 1)] + counts[&(-1, 1)] + 
-                        counts[&(-1, -1)] + counts[&(1, -1)]);
-    }
+    println!("Starting section only: {}", result);
+    assert_eq!(result, 7423);
 
-    // For each section that is partially reachable, count how many locations
-    // are reachable from the nearest edge or corner in the remaining number
-    // of steps.
-    parity = 1 - parity;
-    let section_distance = (steps + 1) / dimension as usize;
-    // Purely up/down/left/right
-    let min_steps = start as usize + 1 + (section_distance - 1) * dimension as usize;
-    assert!(min_steps <= steps);
-    let remaining_steps = steps - min_steps;
-    assert!(remaining_steps < dimension as usize);
-    for origin in [(0, 1), (0, -1), (1, 0), (-1, 0)] {
-        let reachable = &reachable_from[&origin];
-        for dist in reachable {
-            let total_steps = min_steps + dist;
-            if total_steps <= steps && (total_steps & 1) == parity {
-                result += 1;
+    // Count the locations reachable from sections directly up/down/left/right
+    // of the starting section.
+    let mut origin_steps = start + 1;
+    while origin_steps <= steps {
+        parity = (origin_steps ^ steps) & 1;
+        for origin in [(0, 1), (0, -1), (1, 0), (-1, 0)] {
+            // TODO: If the furthest corners are within `steps`, then just
+            // add even_counts or odd_counts, depending on parity
+            // If the next two sections are within `steps`, then just add
+            // both even_counts and odd_counts.
+            for dist in &reachable_from[&(origin)] {
+                let total_steps = origin_steps + dist;
+                if total_steps <= steps && (total_steps & 1) == parity {
+                    result += 1;
+                }
             }
         }
+        origin_steps += dimension;
     }
-    // Some kind of diagonal
-    let min_steps = 2 * (start as usize + 1) + (section_distance - 1) * dimension as usize;
-    assert!(min_steps <= steps);
-    let remaining_steps = steps - min_steps;
-    assert!(remaining_steps < dimension as usize);
-    for origin in [(1, 1), (1, -1), (-1, -1), (-1, 1)] {
-        let reachable = &reachable_from[&origin];
-        for dist in reachable {
-            let total_steps = min_steps + dist;
-            if total_steps <= steps && (total_steps & 1) == parity {
-                result += section_distance - 1;
-            }
-        }
-    }
+    println!("Starting section plus cardinal sections: {}", result);
+    assert_eq!(result, 6060907817);
 
     result
 }
 
-fn shortest_paths(row: isize, col: isize, dimension: isize, rocks: &HashSet<(isize, isize)>) -> Vec<usize> {
+fn shortest_paths(row: usize, col: usize, dimension: usize, rocks: &HashSet<(usize, usize)>) -> Vec<usize> {
+    let row = row as isize;
+    let col = col as isize;
+    let dimension = dimension as isize;
     let mut result = HashMap::<(isize, isize), usize>::new();
     let mut frontier = VecDeque::<(isize, isize)>::new();
     result.insert((row, col), 0);
@@ -252,7 +229,7 @@ fn shortest_paths(row: isize, col: isize, dimension: isize, rocks: &HashSet<(isi
         let dist = *result.get(&(r, c)).unwrap();
         for (r, c) in [(r-1, c), (r+1, c), (r, c-1), (r, c+1)] {
             if r >= 0 && r < dimension && c >= 0 && c < dimension
-            && !result.contains_key(&(r, c)) && !rocks.contains(&(r, c)) {
+            && !result.contains_key(&(r, c)) && !rocks.contains(&(r as usize, c as usize)) {
                 result.insert((r, c), dist+1);
                 frontier.push_back((r, c));
             }
