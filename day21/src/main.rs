@@ -211,15 +211,12 @@ fn part2(input: &str, steps: usize) -> usize {
     // of the starting section.
     let mut origin_steps = start + 1;
     while origin_steps <= steps {
-        parity = (origin_steps ^ steps) & 1;
         for origin in [(0, 1), (0, -1), (1, 0), (-1, 0)] {
             // TODO: If the furthest corners are within `steps`, then just
             // add even_counts or odd_counts, depending on parity
-            // If the next two sections are within `steps`, then just add
-            // both even_counts and odd_counts.
             for dist in &reachable_from[&(origin)] {
                 let total_steps = origin_steps + dist;
-                if total_steps <= steps && (total_steps & 1) == parity {
+                if total_steps <= steps && (total_steps ^ steps) & 1 == 0 {
                     result += 1;
                 }
             }
@@ -227,7 +224,7 @@ fn part2(input: &str, steps: usize) -> usize {
         origin_steps += dimension;
     }
     println!("Starting section plus cardinal sections: {}", result);
-    assert_eq!(result, 6060907817);
+    assert_eq!(result, 6033799933);
 
     result
 }
