@@ -198,8 +198,9 @@ fn part2(input: &str, steps: usize) -> usize {
     // from a corner to the middle of an edge.
     assert_eq!(even_counts[&(0,1)], odd_counts[&(1,1)]);
     assert_eq!(odd_counts[&(0,1)], even_counts[&(1,1)]);
+    let both_counts = even_counts[&(0, 1)] + odd_counts[&(0, 1)];
     let counts = [even_counts, odd_counts];
-
+    
     // Count the locations reachable in the starting section
     let mut parity = steps & 1;
     assert!(steps >= dimension);
@@ -209,7 +210,19 @@ fn part2(input: &str, steps: usize) -> usize {
 
     // Count the locations reachable from sections directly up/down/left/right
     // of the starting section.
-    let mut origin_steps = start + 1;
+    //
+    // Figure out how many pairs of sections (even and odd offsets) are
+    // completely within `steps`.  We can just multiply instead of iterating.
+    // To get from start to any of the corners is start + start == dimension - 1.
+    // For N pairs of sections, the far corners are 2 * N * dimension + dimension - 1.
+    // (2*N+1) * dimension - 1 <= steps
+    // (2*N+1) * dimension <= steps + 1
+    // 2*N+1 <= (steps + 1) / dimension     // note integer rounding to zero!
+    // 2*N <= (steps + 1) / dimension - 1
+    // N <= ((steps + 1) / dimension - 1) / 2   // integer rounding to zero!
+    let num_section_pairs = ((steps + 1) / dimension - 1) / 2;
+    result += both_counts * num_section_pairs * 4;      // all 4 directions
+    let mut origin_steps = start + 1 + 2 * dimension * num_section_pairs;
     while origin_steps <= steps {
         for origin in [(0, 1), (0, -1), (1, 0), (-1, 0)] {
             // TODO: If the furthest corners are within `steps`, then just
