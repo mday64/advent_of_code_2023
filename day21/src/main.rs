@@ -182,6 +182,22 @@ fn part2(input: &str, steps: usize) -> usize {
         even_counts.insert((dr, dc), num_even);
         odd_counts.insert((dr, dc), num_odd);
     }
+    assert_eq!(even_counts[&(0, 1)], even_counts[&(0, -1)]);
+    assert_eq!(even_counts[&(0, 1)], even_counts[&(1, 0)]);
+    assert_eq!(even_counts[&(0, 1)], even_counts[&(-1, 0)]);
+    assert_eq!(even_counts[&(1, 1)], even_counts[&(-1, -1)]);
+    assert_eq!(even_counts[&(1, 1)], even_counts[&(1, -1)]);
+    assert_eq!(even_counts[&(1, 1)], even_counts[&(-1, 1)]);
+    assert_eq!(odd_counts[&(0, 1)], odd_counts[&(0, -1)]);
+    assert_eq!(odd_counts[&(0, 1)], odd_counts[&(1, 0)]);
+    assert_eq!(odd_counts[&(0, 1)], odd_counts[&(-1, 0)]);
+    assert_eq!(odd_counts[&(1, 1)], odd_counts[&(-1, -1)]);
+    assert_eq!(odd_counts[&(1, 1)], odd_counts[&(1, -1)]);
+    assert_eq!(odd_counts[&(1, 1)], odd_counts[&(-1, 1)]);
+    // The two below are true because `start` is odd.  There are `start` steps
+    // from a corner to the middle of an edge.
+    assert_eq!(even_counts[&(0,1)], odd_counts[&(1,1)]);
+    assert_eq!(odd_counts[&(0,1)], even_counts[&(1,1)]);
     let counts = [even_counts, odd_counts];
 
     // Count the locations reachable in the starting section
