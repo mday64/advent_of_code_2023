@@ -43,7 +43,7 @@ fn part2(input: &str) -> usize {
 }
 
 fn calculate_energized(
-    grid: &Vec<Vec<char>>,
+    grid: &[Vec<char>],
     start_row: isize,
     start_col: isize,
     direction: Direction,
