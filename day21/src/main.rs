@@ -9,9 +9,7 @@ fn main() {
 
     let result2 = part2(input, 26_501_365);
     println!("Part 2: {result2}");
-    // 610315846454025 is too low
-    // 610316615797122 is too low
-    // assert_eq!(result2, 610316615797122);
+    assert_eq!(result2, 610321885082978);
 }
 
 fn part1(input: &str, steps: u32) -> usize {
@@ -271,16 +269,15 @@ fn part2(input: &str, steps: usize) -> usize {
     //
     // TODO: Instead of looping over full sections, use a closed form
     // expression (sum of all even/odd numbers).
-    parity = steps & 1;
-    let mut min_steps = 2 * dimension + 1;
+    let mut min_steps = dimension + 1;
     let mut max_steps = 3 * dimension - 1;
     let mut diagonal_length = 1;
     while max_steps <= steps {
+        parity = (steps ^ min_steps) & 1;
         result += counts[parity][&(1, 1)] * diagonal_length * 4;
         diagonal_length += 1;
         min_steps += dimension;
         max_steps += dimension;
-        parity = 1 - parity;
     }
     while min_steps <= steps {
         for origin in [(1, 1), (1, -1), (-1, 1), (-1, -1)] {
@@ -296,7 +293,7 @@ fn part2(input: &str, steps: usize) -> usize {
         min_steps += dimension;
     }
     println!("Including diagonal sections: {}", result);
-    assert_eq!(result, 610316615797122);
+    assert_eq!(result, 610321885082978);
 
     result
 }
